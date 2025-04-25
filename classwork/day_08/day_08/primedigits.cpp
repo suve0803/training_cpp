@@ -6,7 +6,7 @@ int main() {
 	int N;
 	cout << "num: ";
 	cin >> N;
-	bool ret = nprime(N);//function calling
+	int ret = nprime(N);//function calling
 	if (ret == true)
 		cout << "Given number: " << N << endl;
 }
@@ -28,14 +28,20 @@ bool nprime(int N) {
 		return false;
 }
 int getdigit(int N) {
+	int countnprime = 0;
+	int count = 0;
 	int digit;
 	while (N > 0) {
 		digit = N % 10;
 		cout << digit;
 		if (nprime(digit) == true) {
 			cout << digit;
+			countnprime ++;
 		}
 		N /= 10;
+		count++;
+		
 	}
+
 	return 0;
 }
