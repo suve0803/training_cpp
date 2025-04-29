@@ -1,11 +1,11 @@
 #include<iostream>
 using namespace std;
 int main() {
-	int n;
+	long long int n;
 	cout << "Enter a integer: ";
 	cin >> n;
-	int i0 = 0, i1 = 0, i2 = 0, i3 = 0, i4 = 0, i5 = 0, i6 = 0, i7 = 0, i8 = 0, i9 = 0;
-	int n1 = n;
+	long long int i0 = 0, i1 = 0, i2 = 0, i3 = 0, i4 = 0, i5 = 0, i6 = 0, i7 = 0, i8 = 0, i9 = 0;
+	long long int n1 = n;
 	while (n1 > 0) {
 		int num = n1 % 10;
 		switch (num) {
@@ -35,18 +35,18 @@ int main() {
 			i9++;
 			break;
 		}
-		num /= 10;
+		n1 /= 10;
 	}
 	cout << "Digit frequency:" << endl;
-	cout << "0" << ":" << 0 << endl;
-	cout << "1" << ":" << 1 << endl;
-	cout << "2" << ":" << 2 << endl;
-	cout << "3" << ":" << 3 << endl;
-	cout << "4" << ":" << 4 << endl;
-	cout << "5" << ":" << 5 << endl;
-	cout << "6" << ":" << 6 << endl;
-	cout << "7" << ":" << 7 << endl;
-	cout << "8" << ":" << 8 << endl;
-	cout << "9" << ":" << 9 << endl;
+	cout << "0" << ":" << i0 << endl;
+	cout << "1" << ":" << i1 << endl;
+	cout << "2" << ":" << i2 << endl;
+	cout << "3" << ":" << i3 << endl;
+	cout << "4" << ":" << i4 << endl;
+	cout << "5" << ":" << i5 << endl;
+	cout << "6" << ":" << i6 << endl;
+	cout << "7" << ":" << i7 << endl;
+	cout << "8" << ":" << i8 << endl;
+	cout << "9" << ":" << i9 << endl;
 	return 0;
 }

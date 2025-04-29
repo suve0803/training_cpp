@@ -6,11 +6,24 @@ int main() {
 	cout << "Enter the number: " << endl;
 	cin >> n1;
 	n2 = n1;
-	while (n2 != 0) {
-		reminder = n2 % 10;
-		result = result + reminder * reminder * reminder;
-		n2 /= 10;
+	int digit = 0;
+
+	int temp = n1;
+	while (temp > 0) {
+		digit++;
+		temp /= 10;
 	}
+	temp = n1;
+	while (temp > 0) {
+		reminder = temp % 10;
+	
+	int num = 1;
+	for (int i = 0;i < digit;i++) {
+		num *= reminder;
+	}
+	result += num;
+	temp /= 10;
+}
 	if (result == n1) {
 		cout << n1 << " is a amstrong number" << endl;
 	}
