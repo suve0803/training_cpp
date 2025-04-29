@@ -1,29 +1,33 @@
 #include<iostream>
+#define cap 5
+
 using namespace std;
 int main() {
-	int arr[10];
+	int arr[cap];
 	int search;
 	int find;
 	cout << "Enter the elements: " << endl;
-	for (int i = 0;i < 10;i++) {
+	for (int i = 0;i < cap;i++) {
 		cin >> arr[i];
 	}
 	cout << "The numbers are: " << endl;
-	for (int i = 0;i < 10;i++) {
+	for (int i = 0;i < cap;i++) {
 		cout << arr[i];
 	}
 	cout << endl;
 	cout << "Enter the number: " << endl;
 	cin >> search;
-	for (int i = 0;i < 10;i++) {
+	int i;
+	for (i = 0;i < cap;i++) {
 		if (arr[i] == search) {
-			 find= true;
-		}
-		if (find) {
-			cout << search << "found" << endl;
-		}
-		else {
-			cout << search << "not found"<< endl;
+			break;
 		}
 	}
+		if (i==cap) {
+			cout << search << " not found" << endl;
+		}
+		else {
+			cout << search << " found"<< endl;
+		}
+	
 }

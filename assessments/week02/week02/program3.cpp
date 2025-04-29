@@ -25,10 +25,10 @@ int main() {
 	temp /= 10;
 }
 	if (result == n1) {
-		cout << n1 << " is a amstrong number" << endl;
+		cout << n1 << " is a Armstrong number" << endl;
 	}
 	else {
-		cout << n1 << " is a not amstrong number" << endl;
+		cout << n1 << " is a not Armstrong number" << endl;
 	}
 	return 0;
 }
