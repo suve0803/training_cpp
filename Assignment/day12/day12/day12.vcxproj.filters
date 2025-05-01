@@ -21,7 +21,16 @@
     <ClCompile Include="prg02.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="prg03.cpp">
+    <ClCompile Include="prj03.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="prj04.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="prj05.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="prg06.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
