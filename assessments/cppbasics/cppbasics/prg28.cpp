@@ -1,4 +1,5 @@
 /*Write a Program to Print a Pyramid Pattern*/
+
 #include<iostream>
 using namespace std;
 int main() {
@@ -15,3 +16,5 @@ int main() {
 	}
 	return 0;
 }
+
+

@@ -12,7 +12,7 @@ int main() {
 		return 0;
 	}for (int i = 0;i < str1.length();i++) {
 		count1[str1[i] - 'a']++;
-		count2[str1[i] - 'a']++;
+		count2[str2[i] - 'a']++;
 	}for (int i = 0;i < 26;i++) {
 		if (count1[i] != count2[i]) {
 			cout << str1 << " " << "and" << " " << str2 << " " << "are not an anagram" << endl;
