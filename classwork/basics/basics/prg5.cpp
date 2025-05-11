@@ -2,11 +2,12 @@
 using namespace std;
 int main() {
 	char ch;
-	int arr[] = { 'a','e','i','o','u' };
+	cin >> ch;
+	char arr[] = { 'a','e','i','o','u' };
 	if (arr) {
-		cout << ch << " is a vowel";
+		cout <<  << "vowel";
 	}
 	else {
-		cout << ch << " is a consonant";
+		cout << arr << "consonant";
 	}
 }
