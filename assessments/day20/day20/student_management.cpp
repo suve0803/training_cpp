@@ -3,12 +3,12 @@
 using namespace std;
 
 const int MAX_STUDENTS = 100;
-void add_Stud(int id[], string std_name[], int age[], string std_dept[],float tenth_mark[], float twelth_mark[], float cut_off[], int& std_count);
+void add_Stud(int id[], string std_name[], int age[], string std_dept[], float tenth_mark[], float twelth_mark[], float cut_off[], int& std_count);
 void view_Stud(const int id[], const string std_name[], const int age[], const string std_dept[], float tenth_mark[], float twelth_mark[], const float cut_off[], int std_count);
 void update_Stud(int id[], string std_name[], int age[], string std_dept[], float tenth_mark[], float twelth_mark[], float cut_off[], int std_count);
 //void edit_Stud(int id[], string std_name[], int age[], string std_dept[], float tenth_mark[], float twelth_mark[], float cut_off[], int& std_count);
 void list_Stud(const int id[], const string std_name[], const int age[], const string std_dept[], float tenth_mark[], float twelth_mark[], const float cut_off[], int std_count);
-//void generate_Reports(const string std_dept[], int std_count);
+void generate_Reports(const string std_dept[], int std_count);
 
 int main() {
     
@@ -30,9 +30,9 @@ int main() {
         cout << "2. View All Students"<<endl;
         cout << "3. Update Student"<<endl;
         //cout << "4. Edit Student\n";
-        cout << "4. List Students by Department"<<endl;
-        //cout << "5. Generate Department Reports\n";
-        cout << "5. Exit"<<endl;
+        cout << "5. List Students by Department"<<endl;
+        cout << "5. Generate Department Reports\n";
+        cout << "6. Exit"<<endl;
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -52,16 +52,16 @@ int main() {
         case 4:
             list_Stud(id, std_name, age, std_dept, tenth_mark, twelth_mark, cut_off, std_count);
             break;
-       /* case 5:
+       case 5:
             generate_Reports(std_dept, std_count);
-            break;*/
-        case 5:
+            break;
+        case 6:
             cout << "Exiting the program.!\n";
             break;
         default:
             cout << "Invalid choice. Please try again.\n";
         }
-    } while (choice != 5);
+    } while (choice != 6);
 
     return 0;
 }
@@ -72,7 +72,8 @@ void add_Stud(int id[], string std_name[], int age[], string std_dept[], float t
         cout << "Maximum limit reached \n";
         return;
     }
-
+    
+    
     cout << "Enter Student ID: ";
     cin >> id[std_count];
     cin.ignore();
@@ -89,7 +90,9 @@ void add_Stud(int id[], string std_name[], int age[], string std_dept[], float t
     cin >> twelth_mark[std_count];
     cout << "Enter Cut Off: ";
     cin >> cut_off[std_count];
+    id++;
     std_count++;
+    
     cout << "Student added successfully!"<<endl;
     cout << "=============================" << endl;
 }
@@ -139,19 +142,19 @@ void update_Stud(int id[], string std_name[], int age[], string std_dept[], floa
 //    int ids;
 //    cout << "Enter Student ID to delete: ";
 //    cin >> ids;
-//
-//    for (int i = 0; i < count; i++) {
-//        if (id[i] == ids) {
-//            for (int j = i; j < count - 1; j++) {
-//                id[j] = id[j + 1];
-//                std_name[j] = std_name[j + 1];
-//                age[j] = age[j + 1];
-//                std_dept[j] = std_dept[j + 1];
-//                cut_off[j] = cut_off[j + 1];
-//            }
-//            count--;
-//            cout << "Student edited successfully.\n";
-//            return;
+//    
+//            for (int i = 0; i < count; i++) {
+//                if (ids[i] == id) {
+//                    for (int j = i; j < count - 1; j++) {
+//                        ids[j] = ids[j + 1];
+//                        std_name[j] = std_name[j + 1];
+//                        age[j] = age[j + 1];
+//                        std_dept[j] = std_dept[j + 1];
+//                        grade[j] = grade[j + 1];
+//                    }
+//                    count--;
+//                    cout << "Student deleted successfully.\n";
+//                    return;
 //        }
 //    }
 //
@@ -177,3 +180,22 @@ void list_Stud(const int id[], const string std_name[], const int age[], const s
     }
 }
 
+void generate_Reports(const string std_dept[], int std_count) {
+    if (std_count == 0) {
+        cout << "No students to generate reports.\n";
+        return;
+    }
+
+    cout << "\n--- Department Reports ---\n";
+    for (int i = 0; i < std_count; i++) {
+        int deptCount = 1;
+        if (i == 0 || std_dept[i] != std_dept[i - 1]) {
+            for (int j = i + 1; j < std_count; j++) {
+                if (std_dept[i] == std_dept[j]) {
+                    deptCount++;
+                }
+            }
+            cout << "Department: " << std_dept[i] << ", Total Students: " << deptCount << "\n";
+        }
+    }
+}
