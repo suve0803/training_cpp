@@ -13,6 +13,7 @@ int main() {
 	S.setSDept("ECE");
 	S.setSYear(2);
 	S.setScgpa(8.14);
+	//S.setSgrade(avg);
 	S.display();
 
 	return 0;

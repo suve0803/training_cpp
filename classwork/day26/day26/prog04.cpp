@@ -26,7 +26,8 @@ public:
 
 private:
 	float calcAvg();
-
+	/*void setSgrade();
+	void getSgrade();*/
 };
 
 void student:: setSid(int r)
@@ -70,6 +71,7 @@ void student:: setSmarks(float m[])
 }
 
 
+
 //void student:: setScontact(float c) {
 //	Scontact = c;
 //}
@@ -97,6 +99,22 @@ float student::calcAvg() {
 	}
 	return avg / 4.0;
 }
+//char student::setSgrade() {
+//	float avg = calcAvg();
+//	if (avg >= 80) {
+//		return 'A';
+//	}
+//	else if (avg >= 65 && avg <= 79) {
+//		return 'B';
+//	}
+//	else if (avg >= 45 && avg <= 64) {
+//		return 'C';
+//	}
+//	else {
+//		return 'F';
+//	}
+//}
+
 
 
 int main() {
