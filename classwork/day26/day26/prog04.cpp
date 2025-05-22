@@ -26,8 +26,7 @@ public:
 
 private:
 	float calcAvg();
-	/*void setSgrade();
-	void getSgrade();*/
+	char getSgrade();
 };
 
 void student:: setSid(int r)
@@ -88,6 +87,7 @@ void student:: display()
 	cout << "department: " << Sdepartment << endl;
 	cout << "cgpa: " << Scgpa << endl;
 	cout << "Avg: " << calcAvg() << endl;
+	cout << "Grade: " << getSgrade() << endl;
 	//cout << "contact: " << Scontact() << endl;
 
 }
@@ -99,21 +99,21 @@ float student::calcAvg() {
 	}
 	return avg / 4.0;
 }
-//char student::setSgrade() {
-//	float avg = calcAvg();
-//	if (avg >= 80) {
-//		return 'A';
-//	}
-//	else if (avg >= 65 && avg <= 79) {
-//		return 'B';
-//	}
-//	else if (avg >= 45 && avg <= 64) {
-//		return 'C';
-//	}
-//	else {
-//		return 'F';
-//	}
-//}
+char student::getSgrade() {
+	float avg = calcAvg();
+	if ((avg >= 80)&&(avg<=100)) {
+		return 'A';
+	}
+	else if ((avg >= 65) && (avg <= 79)) {
+		return 'B';
+	}
+	else if ((avg >= 45) && (avg <= 64)) {
+		return 'C';
+	}
+	else {
+		return 'F';
+	}
+}
 
 
 

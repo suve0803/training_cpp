@@ -137,28 +137,7 @@ void update_Stud(int id[], string std_name[], int age[], string std_dept[], floa
 
     cout << "Student with ID " << id << " not found.\n";
 }
-void edit_Stud(int id[], string std_name[], int age[], string std_dept[], float tenth_mark[], float twelth_mark[], float cut_off[], int& std_count) {
-    int ids;
-    cout << "Enter Student ID to delete: ";
-    cin >> ids;
 
-    for (int i = 0; i < std_count; i++) {
-        if (id[i] == ids) {
-            for (int j = i; j < std_count - 1; j++) {
-                id[j] = id[j + 1];
-                std_name[j] = std_name[j + 1];
-                age[j] = age[j + 1];
-                std_dept[j] = std_dept[j + 1];
-                cut_off[j] = cut_off[j + 1];
-            }
-            std_count--;
-            cout << "Student deleted successfully.\n";
-            return;
-        }
-    }
-
-    cout << "Student with ID " << id << " not found.\n";
-}
 void list_Stud(const int id[], const string std_name[], const int age[], const string std_dept[], float tenth_mark[], float twelth_mark[], const float cut_off[], int std_count) {
     string department;
     cout << "Enter Department: ";
