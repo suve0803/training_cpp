@@ -8,93 +8,112 @@ private:
 	char Sdepartment[5];
 	int Scgpa;
 	float Smarks[5];
-	int Scontact;
+	//int Scontact;
 	//char stud_mailid[20];
 public:
-	/*void setSid(int r);
+	void setSid(int r);
 	int getSid();
 	void setSName(char* s);
 	char* getSname();
 	void setSDept(char* d);
 	char* getSdept();
+	void setSYear(int y);
+	int getSYear();
 	void setScgpa(int p);
 	float getScgpa();
 	void setSmarks(float m[]);
-	void display();*/
+	void display();
 
-
-
-	void setSid(int r)
-	{
-		Sid = r;
-	}
-	int getSid() {
-		return Sid;
-	}
-
-	void setSName(char* s)
-	{
-		strcpy(Sname, s);
-	}
-	char* getSname() {
-		return Sname;
-	}
-	void setSYear(int y) {
-		Syear = y;
-	}
-	int getSYear() {
-		return Syear;
-	}
-	void setSDept(char* d)
-	{
-		strcpy(Sdepartment, d);
-	}
-	char* getSdept() {
-		return Sdepartment;
-	}
-	void setScgpa(int p) {
-		Scgpa = p;
-	}
-	float getScgpa() {
-		return Scgpa;
-	}
-	void setSmarks(float m[])
-	{
-		for (int i = 0;i < 5;i++)
-			Smarks[i] = m[i];
-	}
-
-
-	void setScontact(float c) {
-		Scontact = c;
-	}
-	int getScontact() {
-		return Scontact;
-	}
-
-	void display()
-	{
-
-		cout << "ID: " << Sid << endl;
-		cout << "name: " << Sname << endl;
-		cout << "year: " << Sname << endl;
-		cout << "department: " << Sdepartment << endl;
-		cout << "cgpa: " << Scgpa << endl;
-		cout << "Avg: " << calcAvg() << endl;
-		//cout << "contact: " << Scontact() << endl;
-
-	}
 private:
-	float calcAvg() {
-		float avg = 0.0;
-		for (int i = 0;i < 5;i++) {
-			cout << Smarks[i] << "\t";
-			avg += Smarks[i];
-		}
-		return avg / 5.0;
-	}
-
+	float calcAvg();
+	char getSgrade();
 };
+
+void student::setSid(int r)
+{
+	Sid = r;
+}
+int student::getSid() {
+	return Sid;
+}
+
+void student::setSName(char* s)
+{
+	strcpy(Sname, s);
+}
+char* student::getSname() {
+	return Sname;
+}
+void student::setSYear(int y) {
+	Syear = y;
+}
+int student::getSYear() {
+	return Syear;
+}
+void student::setSDept(char* d)
+{
+	strcpy(Sdepartment, d);
+}
+char* student::getSdept() {
+	return Sdepartment;
+}
+void student::setScgpa(int p) {
+	Scgpa = p;
+}
+float student::getScgpa() {
+	return Scgpa;
+}
+void student::setSmarks(float m[])
+{
+	for (int i = 0;i < 5;i++)
+		Smarks[i] = m[i];
+}
+
+
+
+//void student:: setScontact(float c) {
+//	Scontact = c;
+//}
+//int student:: getScontact() {
+//	return Scontact;
+//}
+
+void student::display()
+{
+
+	cout << "ID: " << Sid << endl;
+	cout << "name: " << Sname << endl;
+	cout << "year: " << Syear << endl;
+	cout << "department: " << Sdepartment << endl;
+	cout << "cgpa: " << Scgpa << endl;
+	cout << "Avg: " << calcAvg() << endl;
+	cout << "Grade: " << getSgrade() << endl;
+	//cout << "contact: " << Scontact() << endl;
+
+}
+float student::calcAvg() {
+	float avg = 0.0;
+	for (int i = 0;i < 4;i++) {
+		cout << Smarks[i] << "\t";
+		avg += Smarks[i];
+	}
+	return avg / 4.0;
+}
+char student::getSgrade() {
+	float avg = calcAvg();
+	if ((avg >= 80) && (avg <= 100)) {
+		return 'A';
+	}
+	else if ((avg >= 65) && (avg <= 79)) {
+		return 'B';
+	}
+	else if ((avg >= 45) && (avg <= 64)) {
+		return 'C';
+	}
+	else {
+		return 'F';
+	}
+}
 
 int main() {
 	char n[] = "Suvetha";
@@ -112,24 +131,15 @@ int main() {
 	s1.setScgpa(g);
 	s1.setSmarks(m);
 	s1.display();
-	cout << s1.getSname() << endl;
-	cout << s1.getSid() << endl;
+	//cout << s1.getSname() << endl;
+	/*cout << s1.getSid() << endl;
 	cout << s1.getSdept() << endl;
-	cout << s1.getSYear() << endl;
+	cout << s1.getSYear() << endl;*/
+	//cout << s1.getSmarks() << endl;
 
 	return 0;
 }
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+ 
