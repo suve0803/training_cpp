@@ -67,7 +67,7 @@ int main() {
 	cout << "Array: " << endl;
 	a.disp();
 
-	cout << "Largest Element: " << endl;
+	cout << "Largest Element: " ;
 	a.largest();
 
 	a.ascending();
