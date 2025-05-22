@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="prog01.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -27,8 +30,22 @@
     <ClCompile Include="prog04.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sample.cpp">
+    <ClCompile Include="prog05.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="prog06.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="prog07.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="prog08.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="retail.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
