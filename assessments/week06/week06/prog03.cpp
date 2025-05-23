@@ -44,22 +44,38 @@ public:
 		}
 	}
 	void printDetails() {
-		cout << "Order " << OrderId << "|" << "Tip" << calculateTip << endl;
-	}
+
+calculateTip(); 
+cout << "Order" <<getOrderId() <<" | Tip: " <<getTip() << endl;
+
+}
+
 };
 
 int main() {
-	DeliveryTip d1;
-	d1.setOrderId("ORD1");
 
-	d1.setBillAmount( 500);
-	d1.setDistance(3);
-	d1.printDetails();
+DeliveryTip d1;
 
-	d1.setOrderId("ORD2");
+ 
 
-	d1.setBillAmount(1000);
-	d1.setDistance(12);
-	d1.printDetails();
+d1.setOrderId("ORD1");
+
+d1.setBillAmount(500);
+
+d1.setDistance(3);
+
+d1.printDetails();
+
+
+
+DeliveryTip d2;
+
+d2.setOrderId("ORD2");
+
+d2.setBillAmount (1000);
+
+d2.setDistance(12);
+
+d2.printDetails();
 	
 }
