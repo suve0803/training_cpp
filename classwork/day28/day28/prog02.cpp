@@ -1,76 +1,84 @@
-#include<iostream>
+#include <iostream>
 #define MAX 5
+
 using namespace std;
-class Stack {
+
+class StackOp {
 private:
-	int push;
-	int pop;
-	int top=-1;
-	int bottom = -1;
-	int display;
+	int top;
+	int bottom;
 	int arr[MAX];
 public:
+	StackOp();
+	bool push(int);
+	bool pop();
+	void display() const;
 
-	void init(int pu,int po,int disp) {
-		push = pu;
-		pop = po;
-		display = disp;
-
-	}
-	int push(int v)
-	{
-		if (top == MAX - 1)
-		{
-			cout << "Stack is full" << endl;
-			return 0;
-		}
-		top++;
-		arr[top] = v;
-		return 0;
-	}
-
-	int pop()
-	{
-		if (top == bottom)
-		{
-			cout << "Stack is empty" << endl;
-			return 0;
-		}
-		cout << arr[top] << " got popped out" << endl;
-		top--;
-		return 0;
-	}
-
-	void display()
-	{
-		if (top == bottom)
-		{
-			cout << "Stack is empty" << endl;
-			return;
-		}
-		cout << "====Stack Elements are===" << endl;
-		for (int i = top;i >= 0;i--)
-			cout << arr[i] << endl;
-
-		cout << endl;
-	}
 };
-int main() {
-	Stack s;
-	push(10);
-	push(20);
-	push(30);
-	push(40);
-	push(50);
-	push(60);
-	display();
+
+StackOp::StackOp() {
+	bottom = -1;
+	top = -1;
+
+}
+
+bool StackOp::push(int v)
+{
+	if (top == MAX - 1)
+	{
+		cout << "Stack is full" << endl;
+		return true;
+	}
+	top++;
+	arr[top] = v;
+
+	return true;
+}
+
+bool StackOp::pop()
+{
+	if (top == bottom)
+	{
+		cout << "Stack is empty" << endl;
+		return true;
+	}
+	cout << arr[top] << " got popped out" << endl;
+	top--;
+	return true;
+}
+
+void StackOp::display() const
+{
+	if (top == bottom)
+	{
+		cout << "Stack is empty" << endl;
+		return;
+	}
+	cout << "====Stack Elements are===" << endl;
+	for (int i = top;i >= 0;i--)
+		cout << arr[i] << endl;
+
+	cout << endl;
+}
 
 
-	pop();
-	pop();
-	display();
-	pop();
-	pop();
-	pop();
-	pop();
+int main()
+{
+	StackOp s;
+	s.push(10);
+	s.push(20);
+	s.push(30);
+	s.push(40);
+	s.push(50);
+	s.push(60);
+	s.display();
+	s.pop();
+	s.display();
+	s.pop();
+	s.pop();
+	s.pop();
+	s.pop();
+	s.pop();
+
+	return 0;
 }
