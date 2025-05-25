@@ -8,6 +8,7 @@ int top = -1;
 int bottom = -1;
 int push(int);
 int pop();
+int peek();
 void display();
 int arr[MAX];
 
@@ -22,10 +23,12 @@ int main()
 	push(60);
 	display();
 
+	cout << "Peek top element: " << peek() << endl;
 
 	pop();
 	pop();
 	display();
+	cout << "Peek top element: " << peek() << endl;
 	pop();
 	pop();
 	pop();
@@ -56,6 +59,15 @@ int pop()
 	cout << arr[top] << " got popped out" << endl;
 	top--;
 	return 0;
+}
+
+int peek()
+{
+	if (top == bottom) {
+		cout << "Stack is empty" << endl;
+		return 0;
+	}
+	return arr[top];
 }
 
 void display()

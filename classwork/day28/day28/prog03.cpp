@@ -56,7 +56,7 @@ public:
             return false;
         }
         cout << "Removed Employee: ";
-        arr[top--].display(); 
+        arr[top--].display();
         return true;
     }
 
