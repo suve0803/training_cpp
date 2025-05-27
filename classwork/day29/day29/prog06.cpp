@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include<iostream>
 #include<cstdlib>
 using namespace std;
@@ -156,6 +157,8 @@ void updateNode(NODE*head, int o_val, int u_val) {
 	}cout << o_val << "not found" << endl;
 
 }
+=======
+>>>>>>> 2743ddc523f0980d44eccf26e0b21f6825d41f43
 
 NODE* createNode()
 {
