@@ -1,0 +1,30 @@
+[INFO] Successfully loaded 5 jobs.
+[DEBUG] Executing Job ID: 1 | Priority: 2
+[DEBUG] Executing Job ID: 2 | Priority: 3
+[DEBUG] Executing Job ID: 3 | Priority: 1
+[DEBUG] Executing Job ID: 4 | Priority: 5
+[DEBUG] Executing Job ID: 5 | Priority: 4
+[INFO] All jobs executed in 680ms.
+[INFO] Log saved to job_log.txt.
+[INFO] Successfully loaded 10 jobs.
+[DEBUG] Executing Job ID: 4 | Priority: 5
+[DEBUG] Executing Job ID: 4 | Priority: 5
+[DEBUG] Executing Job ID: 5 | Priority: 4
+[DEBUG] Executing Job ID: 5 | Priority: 4
+[DEBUG] Executing Job ID: 2 | Priority: 3
+[DEBUG] Executing Job ID: 2 | Priority: 3
+[DEBUG] Executing Job ID: 1 | Priority: 2
+[DEBUG] Executing Job ID: 1 | Priority: 2
+[DEBUG] Executing Job ID: 3 | Priority: 1
+[DEBUG] Executing Job ID: 3 | Priority: 1
+[INFO] All jobs executed in 1360ms.
+[INFO] Log saved to job_log.txt.
+[INFO]Successfully loaded Jobs
+[INFO]Selected Priority Schudeling
+[DEBUG]Executing Job ID: 1 | Priority: 2 | ExecTime 108ms
+[DEBUG]Executing Job ID: 2 | Priority: 3 | ExecTime 152ms
+[DEBUG]Executing Job ID: 3 | Priority: 1 | ExecTime 123ms
+[DEBUG]Executing Job ID: 4 | Priority: 5 | ExecTime 186ms
+[DEBUG]Executing Job ID: 5 | Priority: 4 | ExecTime 140ms
+[INFO]All jobs executed in 709ms
+[INFO]Log saved to job_log.txt
