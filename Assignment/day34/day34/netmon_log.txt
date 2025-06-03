@@ -1,0 +1,5 @@
+[DEBUG] Packet ID: 1 | Protocol: TCP | Size 450
+[DEBUG] Packet ID: 2 | Protocol: UDP | Size 980
+[WARNING] Packet ID: 3 | Protocol: ICMP | Size 1050
+[DEBUG] Packet ID: 4 | Protocol: TCP | Size 200
+[DEBUG] Packet ID: 5 | Protocol: FTP | Size 300

@@ -5,6 +5,7 @@
 #include<chrono>
 #include<algorithm>
 #include<thread>
+#include<sstream>
 using namespace std;
 enum logLevel {
 	INFO = 0,
@@ -85,17 +86,13 @@ public:
 		this_thread::sleep_for(chrono::milliseconds(executionTime));
 		auto end = chrono::system_clock::now();
 		auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-		char msg[100];
-		sprintf(msg, "Executing Job ID: %d | Priority: %d | ExecTime %dms", JobID, priority, duration.count());
-		obj.log(1, msg);
+		ostringstream msg;
+		msg << "Executing Job ID: " << JobID
+			<< " | Priority: " << priority
+			<< " | ExecTime: " << duration.count() << "ms";
+
+		obj.log(DEBUG, msg.str());
 		return duration.count();
-	}
-};
-struct Compare
-{
-	bool operator()(Job obj1, Job obj2)
-	{
-		return obj1.getPriority() < obj2.getPriority();
 	}
 };
 
