@@ -18,7 +18,7 @@ int godNumber(const T& s) {
     }
 
     int maxDefinite = 0; 
-    int minDefinite = 1000; 
+    int minDefinite = 1;
 
     for (int i = 0; i <= 9; i++) {
         if (frequency[i] > 0) {
