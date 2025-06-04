@@ -21,7 +21,7 @@ int main() {
         std::cout << scores[i] << " ";
     }
     cout << endl;
-    std::sort(scores.begin(), scores.end(), [](int a, int b) {
+   /* std::sort(scores.begin(), scores.end(), [](int a, int b) {
         return a < b;
         });
 
@@ -29,7 +29,7 @@ int main() {
     for (size_t i = 0; i < scores.size(); i++) {
         std::cout << scores[i] << " ";
     }
-    cout << endl;
+    cout << endl;*/
     std::cout << "Top 3 Scores: ";
     for (size_t i = 0; i < 3 && i < scores.size(); i++) {
         std::cout << scores[i] << " ";

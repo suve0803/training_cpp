@@ -1,4 +1,7 @@
+/*Task Reordering System (Using std::list)*/
+
 #include<iostream>
+#include<string>
 #include<list>
 using namespace std;
 void addTask(std::list < std::string>& task, std::string& t) {
@@ -18,7 +21,7 @@ void display(std::list<std::string>& task) {
 
 }
 int main() {
-	std::list<std::string>& task;
+	std::list<std::string> task;
 	std::string commands, t;
 	while (true) {
 		cout << "Enter commands: " << endl;
@@ -48,4 +51,5 @@ int main() {
 			cout << "Invalid commands " << endl;
 		}
 	}
+	return 0;
 }
