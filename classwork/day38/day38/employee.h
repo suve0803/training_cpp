@@ -19,6 +19,16 @@ public:
 		return name;
 	}
 	void display() {
-
+		cout << "Id: " << id << "Name: " << name << endl;
 	}
+	bool operator==(const employee& other)const {
+		return id == other.id;
+		return name == other.name;
+	}
+	bool operator<(const employee& other)const {
+		return id < other.id;
+	}
+	/*bool compare(const employee& a, const employee& b) {
+		return a < b;
+	}*/
 };
