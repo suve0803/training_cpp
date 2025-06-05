@@ -1,3 +1,5 @@
+/*std::list<string> – Text Editor Buffer (Doubly Linked List)*/
+
 #include<iostream>
 #include<list>
 #include<string>
