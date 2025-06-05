@@ -17,8 +17,8 @@ std::string toLowerString(const std::string& str) {
     return lowerStr;
 }
 void sortStrings(std::vector<std::string>& vec) {
-    for (size_t i = 0; i < vec.size(); ++i) {
-        for (size_t j = i + 1; j < vec.size(); ++j) {
+    for (size_t i = 0; i < vec.size(); i++) {
+        for (size_t j = i + 1; j < vec.size(); j++) {
             if (vec[i] > vec[j]) {
                 std::string temp = vec[i];
                 vec[i] = vec[j];
@@ -29,7 +29,7 @@ void sortStrings(std::vector<std::string>& vec) {
 }
 void removeDuplicates(std::vector<std::string>& vec) {
     std::vector<std::string> uniqueVec;
-    for (size_t i = 0; i < vec.size(); ++i) {
+    for (size_t i = 0; i < vec.size(); i++) {
         if (i == 0 || vec[i] != vec[i - 1]) {
             uniqueVec.push_back(vec[i]);
         }
@@ -47,7 +47,7 @@ int main() {
     removeDuplicates(words);
 
     std::cout << "[";
-    for (size_t i = 0; i < words.size(); ++i) {
+    for (size_t i = 0; i < words.size(); i++) {
         std::cout << "\"" << words[i] << "\"";
         if (i < words.size() - 1) {
             std::cout << ", ";
