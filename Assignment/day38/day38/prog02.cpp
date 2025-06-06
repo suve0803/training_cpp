@@ -13,7 +13,7 @@ int main()
 	for (auto& fruit : fruits)
 		cout << fruit << endl;
 	
-
+	cout << endl;
 	for (auto& fruit : fruits)
 		transform(fruit.begin(), fruit.end(), fruit.begin(), ::tolower);
 
