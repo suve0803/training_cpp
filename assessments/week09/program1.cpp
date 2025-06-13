@@ -4,6 +4,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <thread>
+#include <mutex>
 
 using namespace std;
 
@@ -92,11 +94,11 @@ public:
             getline(ss, operatorMNC, '|');
             getline(ss, callType, '|');
             ss >> duration;
-            ss.ignore();
+            ss.ignore(1, '|');
             ss >> download;
-            ss.ignore();
+            ss.ignore(1, '|');
             ss >> upload;
-            ss.ignore();
+            ss.ignore(1, '|');
             getline(ss, thirdPartyMSISDN, '|');
             getline(ss, thirdPartyOperatorMNC);
 
@@ -105,13 +107,12 @@ public:
         }
     }
 
-    void generateReports() const {
+    void generateCustomerBillingReport() const {
         unordered_map<string, unordered_map<string, double>> customerData;
-        unordered_map<string, unordered_map<string, double>> operatorData;
 
         for (const auto& record : records) {
             string customerKey = record.msisdn + "|" + record.operatorBrand;
-            string operatorKey = record.operatorMNC;
+
             if (record.callType == "MOC") {
                 customerData[customerKey]["Outgoing Voice"] += record.duration;
             }
@@ -128,6 +129,23 @@ public:
                 customerData[customerKey]["Download"] += record.download;
                 customerData[customerKey]["Upload"] += record.upload;
             }
+        }
+
+        for (const auto& customer : customerData) {
+            cout << "# Customer Data Base: " << customer.first << endl;
+            for (const auto& service : customer.second) {
+                cout << "  " << service.first << ": " << service.second << endl;
+            }
+            cout << endl;
+        }
+    }
+
+    void generateInteroperatorBillingReport() const {
+        unordered_map<string, unordered_map<string, double>> operatorData;
+
+        for (const auto& record : records) {
+            string operatorKey = record.operatorMNC;
+
             if (record.callType == "MOC") {
                 operatorData[operatorKey]["Outgoing Voice"] += record.duration;
             }
@@ -146,14 +164,6 @@ public:
             }
         }
 
-        for (const auto& customer : customerData) {
-            cout << "# Customer Data Base: " << customer.first << endl;
-            for (const auto& service : customer.second) {
-                cout << "  " << service.first << ": " << service.second << endl;
-            }
-            cout << endl;
-        }
-
         for (const auto& op : operatorData) {
             cout << "# Operator Data Base: " << op.first << endl;
             for (const auto& service : op.second) {
@@ -170,7 +180,7 @@ int main() {
 
     int choice;
     do {
-        cout << "1. Sign Up\n2. Login\n3. Exit\nEnter choice: ";
+        cout << "\n1. Sign Up\n2. Login\n3. Exit\nEnter choice: ";
         cin >> choice;
         switch (choice) {
         case 1: {
@@ -191,12 +201,63 @@ int main() {
             cin >> password;
             if (userManager.authenticateUser(username, password)) {
                 cout << "Login successful!" << endl;
+
                 CDRProcessor processor;
                 string filename;
                 cout << "Enter CDR file name: ";
                 cin >> filename;
                 processor.parseCDRFile(filename);
-                processor.generateReports();
+
+                int billingChoice;
+                do {
+                    cout << "\n1. Process CDR file\n2. Print/Search for Billing Information\n3. Logout\nChoice: ";
+                    cin >> billingChoice;
+
+                    switch (billingChoice) {
+                    case 1: {
+                        thread customerBillingThread([&]() {
+                            processor.generateCustomerBillingReport();
+                            });
+
+                        thread interoperatorBillingThread([&]() {
+                            processor.generateInteroperatorBillingReport();
+                            });
+
+                        customerBillingThread.join();
+                        interoperatorBillingThread.join();
+
+                        cout << "Both billing processes completed successfully." << endl;
+                        break;
+                    }
+                    case 2: {
+                        int displayChoice;
+                        do {
+                            cout << "\n1. Customer Billing\n2. Interoperator Settlement Billing\n3. Back\nChoice: ";
+                            cin >> displayChoice;
+
+                            switch (displayChoice) {
+                            case 1:
+                                processor.generateCustomerBillingReport();
+                                break;
+                            case 2:
+                                processor.generateInteroperatorBillingReport();
+                                break;
+                            case 3:
+                                cout << "Returning to main menu..." << endl;
+                                break;
+                            default:
+                                cout << "Invalid choice! Please try again." << endl;
+                            }
+                        } while (displayChoice != 3);
+                        break;
+                    }
+                    case 3:
+                        cout << "Logging out" << endl;
+                        break;
+                    default:
+                        cout << "Invalid choice! Please try again." << endl;
+                    }
+                } while (billingChoice != 3);
             }
             else {
                 cout << "Invalid credentials!" << endl;
@@ -204,10 +265,10 @@ int main() {
             break;
         }
         case 3:
-            cout << "Exit"<<endl;
+            cout << "Exit\n";
             break;
         default:
-            cout << "Invalid choice!"<<endl;
+            cout << "Invalid choice!\n";
         }
     } while (choice != 3);
 
