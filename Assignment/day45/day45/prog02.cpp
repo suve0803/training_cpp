@@ -165,7 +165,7 @@ int main() {
     thread scheduler(auctionScheduler);
     scheduler.detach();
 
-    cout << "Welcome to OAP_SIM\n";
+    cout << "Welcome";
     string id, name, role;
     cout << "Enter ID: "; cin >> id;
     cout << "Enter Name: "; cin >> name;
