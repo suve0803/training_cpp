@@ -18,5 +18,11 @@
     <ClCompile Include="aution.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="prog01.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="prog02.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
