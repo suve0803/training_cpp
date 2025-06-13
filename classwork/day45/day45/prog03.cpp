@@ -45,14 +45,14 @@ public:
 		cv.notify_one();
 	}
 
-	bool popT(task t1) {
+	task popT(task t1) {
 		std::lock_guard<std::mutex> lock(m);
 		if (t.empty()) {
-			return false ;
+			return ;
 		}
 		t1 = t.front();
 		t.pop();
-		return true;
+		return t1;
 	}
 	
 	void waitForTask() {

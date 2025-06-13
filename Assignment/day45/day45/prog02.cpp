@@ -78,7 +78,7 @@ public:
         if (isActive() && bid.amount >= minPrice) {
             bids.push(bid);
             activeBidders.insert(bid.bidderId);
-            cout << "Bid placed: " << bid.bidderId << " -> $" << bid.amount << endl;
+            cout << "Bid placed: " << bid.bidderId << " -> " << bid.amount << endl;
             logBid(bid);
         }
         else {
@@ -99,7 +99,7 @@ public:
             file << "Auction Closed for Item: " << itemId << "\n";
             if (!bids.empty()) {
                 Bid topBid = bids.top();
-                file << "Winner: " << topBid.bidderId << " with $" << topBid.amount << "\n";
+                file << "Winner: " << topBid.bidderId << " with " << topBid.amount << "\n";
             }
             else {
                 file << "No bids received.\n";
@@ -226,7 +226,7 @@ int main() {
     for (auto& auc : auctions) {
         delete auc.second;
     }
-    delete user;
+    //delete user;
 
     return 0;
 }
