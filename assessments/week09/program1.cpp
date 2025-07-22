@@ -81,7 +81,7 @@ private:
 
 public:
     void parseCDRFile(const string& filename) {
-        ifstream file(filename);
+        ifstream file("input.txt");
         string line;
         while (getline(file, line)) {
             stringstream ss(line);
@@ -94,11 +94,11 @@ public:
             getline(ss, operatorMNC, '|');
             getline(ss, callType, '|');
             ss >> duration;
-            ss.ignore(1, '|');
+            ss.ignore();
             ss >> download;
-            ss.ignore(1, '|');
+            ss.ignore();
             ss >> upload;
-            ss.ignore(1, '|');
+            ss.ignore();
             getline(ss, thirdPartyMSISDN, '|');
             getline(ss, thirdPartyOperatorMNC);
 
