@@ -83,7 +83,16 @@ ASTNode* Parser::parseStatement() {
         ASTNode* expr = parseExpression();
         return new LetNode(name, expr);
     }
-   
+    if (match(TokenType::Keyword, "END")) {
+        return nullptr;
+    }
+   /* if (match(TokenType::Keyword, "ELSE")) {
+        throw std::runtime_error("Unexpected token 'ELSE'");
+    }*/
+    if (peek().type == TokenType::Keyword && peek().value == "ELSE") {
+        throw std::runtime_error("Unexpected token 'ELSE'");
+    }
+
     return parseExpression();
 }
 
@@ -253,16 +262,20 @@ ASTNode* Parser::parseIf() {
     if (match(TokenType::Keyword, "THEN") == false) {
         throw std::runtime_error("IF missing THEN");
     }
-    ASTNode* thenStmt = nullptr;
-    if (peek().type != TokenType::Keyword     // not another keyword
-        && peek().type != TokenType::END_OF_LINE // not end of line
-        ) {
-        thenStmt = parseStatement();
+
+    if (peek().type == TokenType::END_OF_LINE) {
+        throw std::runtime_error("IF missing statement after THEN");
     }
+    ASTNode* thenStmt = parseStatement();
+    //ASTNode* thenStmt = nullptr;
+    //if (peek().type != TokenType::Keyword     // not another keyword
+    //    && peek().type != TokenType::END_OF_LINE // not end of line
+    //    ) {
+    //    thenStmt = parseStatement();
+    //}
 
-
-    ASTNode* elseStmt = nullptr;
-    if (match(TokenType::Keyword, "ELSE")) {
+   // ASTNode* elseStmt = nullptr;
+   /* if (match(TokenType::Keyword, "ELSE")) {
         if (peek().type == TokenType::Keyword && peek().value == "IF") {
             get();
             elseStmt = parseIf();
@@ -270,6 +283,14 @@ ASTNode* Parser::parseIf() {
         else {
             elseStmt = parseStatement();
         }
+    }*/
+    ASTNode* elseStmt = nullptr;
+    if (match(TokenType::Keyword, "ELSE")) {
+        // ELSE followed by a valid statement
+        if (peek().type == TokenType::END_OF_LINE) {
+            throw std::runtime_error("IF missing statement after ELSE");
+        }
+        elseStmt = parseStatement();
     }
 
     return new IfElseNode(left, op, right, thenStmt, elseStmt);
