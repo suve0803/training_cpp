@@ -6,21 +6,21 @@ enum class ASTType {
     Program,
     PrintStmt,
     LetStmt,
-    IfStmt,
-    NumberExpr,
-    IdentExpr,
-    BinOpExpr,
+    IfElseStmt,
+    //IfStmt,
     ForStmt,
     GotoStmt,
     InputStmt,
-    /*DataStmt, 
+    DataStmt,
     ReadStmt,
-    GosubStmt, 
-    ReturnStmt, 
-    StopStmt, 
-    RemStmt,*/
-    IfElseStmt,
-    StringExpr
+    GosubStmt,
+    ReturnStmt,
+    StopStmt,
+    RemStmt,
+    NumberExpr,
+    IdentExpr,
+    BinOpExpr,
+    StringExpr,
 };
 
 class ASTNode {
@@ -44,43 +44,55 @@ public:
     }
 };
 
-//class DataNode : public ASTNode {
-//public:
-//    std::vector<std::string> values;
-//    DataNode(const std::vector<std::string>& vals) : values(vals) {}
-//    ASTType type() const override { return ASTType::DataStmt; }
-//};
-//
-//class ReadNode : public ASTNode {
-//public:
-//    std::string var;
-//    ReadNode(const std::string& n) : var(n) {}
-//    ASTType type() const override { return ASTType::ReadStmt; }
-//};
-//
-//class GosubNode : public ASTNode {
-//public:
-//    int line;
-//    GosubNode(int ln) : line(ln) {}
-//    ASTType type() const override { return ASTType::GosubStmt; }
-//};
-//
-//class ReturnNode : public ASTNode {
-//public:
-//    ASTType type() const override { return ASTType::ReturnStmt; }
-//};
-//
-//class StopNode : public ASTNode {
-//public:
-//    ASTType type() const override { return ASTType::StopStmt; }
-//};
-//
-//class RemNode : public ASTNode {
-//public:
-//    std::string comment;
-//    RemNode(const std::string& c) : comment(c) {}
-//    ASTType type() const override { return ASTType::RemStmt; }
-//};
+class DataNode : public ASTNode {
+public:
+    std::vector<std::string> values;
+    DataNode(const std::vector<std::string>& vals) : values(vals) {}
+    ASTType type() const override { 
+        return ASTType::DataStmt; 
+    }
+};
+
+class ReadNode : public ASTNode {
+public:
+    std::string var;
+    ReadNode(const std::string& n) : var(n) {}
+    ASTType type() const override { 
+        return ASTType::ReadStmt; 
+    }
+};
+
+class GosubNode : public ASTNode {
+public:
+    int line;
+    GosubNode(int ln) : line(ln) {}
+    ASTType type() const override {
+        return ASTType::GosubStmt; 
+    }
+};
+
+class ReturnNode : public ASTNode {
+public:
+    ASTType type() const override { 
+        return ASTType::ReturnStmt; 
+    }
+};
+
+class StopNode : public ASTNode {
+public:
+    ASTType type() const override { 
+        return ASTType::StopStmt; 
+    }
+};
+
+class RemNode : public ASTNode {
+public:
+    std::string comment;
+    RemNode(const std::string& c) : comment(c) {}
+    ASTType type() const override {
+        return ASTType::RemStmt; 
+    }
+};
 
 class PrintNode : public ASTNode {
 public:
@@ -94,25 +106,25 @@ public:
     }
 };
 //========
-class IfNode :public ASTNode {
-public:
-    ASTNode* lhs;
-    std::string op;
-    ASTNode* rhs;
-    ASTNode* thenStmt;
-
-    IfNode(ASTNode* l,const std::string& o,ASTNode* r,ASTNode* t)
-        :lhs(l),op(o),rhs(r),thenStmt(t){}
-    ~IfNode() {
-        delete lhs;
-        delete rhs;
-        delete thenStmt;
-    }
-
-    ASTType type() const override {
-        return ASTType::IfStmt;
-}
-};
+//class IfNode :public ASTNode {
+//public:
+//    ASTNode* lhs;
+//    std::string op;
+//    ASTNode* rhs;
+//    ASTNode* thenStmt;
+//
+//    IfNode(ASTNode* l,const std::string& o,ASTNode* r,ASTNode* t)
+//        :lhs(l),op(o),rhs(r),thenStmt(t){}
+//    ~IfNode() {
+//        delete lhs;
+//        delete rhs;
+//        delete thenStmt;
+//    }
+//
+//    ASTType type() const override {
+//        return ASTType::IfStmt;
+//}
+//};
 
 
 class LetNode : public ASTNode {
@@ -128,7 +140,7 @@ public:
         return ASTType::LetStmt; 
     }
 };
-
+//
 class NumberNode : public ASTNode {
 public:
     std::string value;

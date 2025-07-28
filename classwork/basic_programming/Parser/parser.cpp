@@ -10,10 +10,10 @@ ASTNode* Parser::parse(const std::vector<Token>& toks) {
 }
 
 const Token& Parser::peek() const {
+    static Token eof = Token(TokenType::END_OF_LINE, "", 0);
     if (pos < (int)tokens->size()) {
         return (*tokens)[pos];
     }
-    static Token eof = Token(TokenType::END_OF_LINE, "", 0);
     return eof;
 }
 
@@ -51,12 +51,29 @@ bool Parser::match(TokenType t, const std::string& value) {
 //    return program;
 //}
 
+//ASTNode* Parser::parseProgram() {
+//    ProgramNode* program = new ProgramNode();
+//    while (peek().type != TokenType::END_OF_LINE) {
+//        ASTNode* stmt = parseStatement();
+//        if (!stmt) break;  // `END` or label-only line
+//        program->stmts.push_back(stmt);
+//    }
+//    return program;
+//}
+
 ASTNode* Parser::parseProgram() {
     ProgramNode* program = new ProgramNode();
     while (peek().type != TokenType::END_OF_LINE) {
         ASTNode* stmt = parseStatement();
-        if (!stmt) break;  // `END` or label-only line
+        if (!stmt) break;
         program->stmts.push_back(stmt);
+
+        // handle multiple statements on same line:
+        while (match(TokenType::Separator, ":")) {
+            ASTNode* nextStmt = parseStatement();
+            if (!nextStmt) break;
+            program->stmts.push_back(nextStmt);
+        }
     }
     return program;
 }
@@ -72,6 +89,7 @@ ASTNode* Parser::parseStatement() {
     //        get(); // consume the label number
     //    }
     //}
+    //------------------------------------------
     if (peek().type == TokenType::Number) {
         // If next token doesn't start a stmt, skip the label
         if (pos + 1 < (int)tokens->size() &&
@@ -82,6 +100,7 @@ ASTNode* Parser::parseStatement() {
         }
         get(); // remove label before normal parsing
     }
+    //---------------------------------------------------
     // FOR
     if (match(TokenType::Keyword, "FOR")) {
         return parseFor();
@@ -91,20 +110,30 @@ ASTNode* Parser::parseStatement() {
     if (match(TokenType::Keyword, "IF")) {
         return parseIf();
     }
-
+    //------------------------------------------------------
     // GOTO
     if (peek().type == TokenType::Keyword && peek().value == "GOTO") {
         get(); // consume the "GOTO" keyword
         std::cerr << "[DEBUG] GOTO detected; calling parseGoto(), pos=" << pos << "\n";
         return parseGoto();
     }
+    //--------------------------------------------------------
     //GOSUB
-    /*if (match(TokenType::Keyword, "GOSUB")) {
+    if (match(TokenType::Keyword, "GOSUB")) {
         return parseGosub();
     }
     if (match(TokenType::Keyword, "RETURN")) {
         return parseReturn();
-    }*/
+    }
+    if (match(TokenType::Keyword, "DATA")) {
+        return parseData();
+    }
+    if (match(TokenType::Keyword, "READ")) {
+        return parseRead();
+    }
+    if (match(TokenType::Keyword, "STOP")) {
+        return parseStop();
+    }
 
     // INPUT
     if (match(TokenType::Keyword, "INPUT")) {
@@ -141,10 +170,9 @@ ASTNode* Parser::parseStatement() {
     }*/
 
     // Default: treat as expression or syntax error
-    return parseExpression();
+    throw std::runtime_error("Unexpected token '" + peek().value + "'");
+    //return parseExpression();
 }
-
-
 //std::string Parser::parseComparison() {
 //    if (peek().type == TokenType::Operator || (peek().type == TokenType::Operator &&
 //        (peek().value == "=" || peek().value == "<" || peek().value == ">" || peek().value == "<>" || peek().value == ">=" || peek().value == "<="))) {
@@ -233,8 +261,6 @@ ASTNode* Parser::parseTerm() {
 //    throw std::runtime_error(std::string("Unexpected token '") + peek().value + "'");
 //}
 
-
-
 ASTNode* Parser::parseFactor() {
     if (match(TokenType::Number)) {
         return new NumberNode((*tokens)[pos - 1].value);
@@ -321,8 +347,6 @@ ASTNode* Parser::parseIf() {
     //    ) {
     //    thenStmt = parseStatement();
     //}
-
-   // ASTNode* elseStmt = nullptr;
    /* if (match(TokenType::Keyword, "ELSE")) {
         if (peek().type == TokenType::Keyword && peek().value == "IF") {
             get();
@@ -375,20 +399,63 @@ ASTNode* Parser::parseIf() {
 //    }
 //    return new IfElseNode(left, op, right, thenStmt, elseStmt);
 //}
-
-
-
+//ASTNode* Parser::parseGoto() {
+//   // std::cerr << "[DEBUG] in parseGoto(), pos=" << pos << "\n";
+//    if (!match(TokenType::Number)) {
+//        throw std::runtime_error("GOTO requires a line number");
+//    }
+//    int line = std::atoi((*tokens)[pos - 1].value.c_str());
+//   // std::cerr << "[DEBUG] goto line = " << line << ", new pos=" << pos << "\n";
+//    while (match(TokenType::Separator, ":"));
+//    return new GotoNode(line);
+//}
 ASTNode* Parser::parseGoto() {
-    std::cerr << "[DEBUG] in parseGoto(), pos=" << pos << "\n";
     if (!match(TokenType::Number)) {
-        throw std::runtime_error("GOTO requires a line number");
+        throw std::runtime_error("GOTO needs line");
     }
     int line = std::atoi((*tokens)[pos - 1].value.c_str());
-    std::cerr << "[DEBUG] goto line = " << line << ", new pos=" << pos << "\n";
-    while (match(TokenType::Separator, ":"));
     return new GotoNode(line);
 }
 
+ASTNode* Parser::parseData() {
+    std::vector<std::string> vals;
+    do {
+        if (match(TokenType::Number) || match(TokenType::String)) {
+            vals.push_back((*tokens)[pos - 1].value);
+        }
+    } while (match(TokenType::Separator, ","));
+    return new DataNode(vals);
+}
+
+ASTNode* Parser::parseRead() {
+    if (!match(TokenType::Identifier)) {
+        throw std::runtime_error("READ needs variable");
+    }
+    return new ReadNode((*tokens)[pos - 1].value);
+}
+
+ASTNode* Parser::parseGosub() {
+    if (!match(TokenType::Number)) {
+        throw std::runtime_error("GOSUB needs line");
+    }
+    int ln = std::stoi((*tokens)[pos - 1].value);
+    return new GosubNode(ln);
+}
+
+ASTNode* Parser::parseReturn() {
+    return new ReturnNode();
+}
+
+ASTNode* Parser::parseStop() {
+    return new StopNode();
+}
+
+ASTNode* Parser::parseRem() {
+    get(); // consume REM
+    std::string rest = peek().value; // everything else
+    pos = tokens->size(); // skip to EOL
+    return new RemNode(rest);
+}
 
 
 ASTNode* Parser::parseInput() {
