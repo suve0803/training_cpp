@@ -138,6 +138,10 @@
     <ClInclude Include="Parser\parser.h" />
     <ClInclude Include="Lexer\Token.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="prog.txt" />
+    <Text Include="program.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

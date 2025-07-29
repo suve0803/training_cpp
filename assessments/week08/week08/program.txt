@@ -1,0 +1,1702 @@
+Token.h
+
+#ifndef TOKEN_H
+#define TOKEN_H
+#include<string>
+enum class TokenType { //different types of token in GWBASICS	
+	Number,
+	String,
+	Identifier,
+	Keyword,
+	Symbol,
+	Comment,
+	END_OF_LINE,
+	Operator,//to classify math or logical operator
+	Separator,//for seperating comma,colon etc.
+	Invalid
+};
+struct Token {
+	TokenType type; //what kind of token it is
+	std::string value;//the exact word or number from code
+	size_t position;//Index where the token starts in the line
+	//std::string toString() const;
+	Token(TokenType t, const std::string& v, size_t p) {
+		type = t;
+		value = v;
+		position = p;
+
+	}
+};
+
+#endif 
+
+Lexer.h
+
+#ifndef LEXER_H
+#define LEXER_H
+#include<string>
+#include<vector>
+
+#include "Token.h"
+
+//The Lexer class reads one line of Basiccode and breaks it into tokens
+class Lexer {
+public:
+
+	//Lexer(string);
+	Lexer();
+	//This function does the main task of scanning and returning tokens
+	std::vector<Token> tokenize(const std::string& inputLine);
+private:
+	std::string inputLine;//full line of code to process
+	unsigned int currentIndex;//tracks which character we are looking at
+	//Helper functions used while scanning the line
+	void skipSpaces();
+	char getCurrentChar() const;
+	char moveToNextChar();
+	//These function read specific parts of line and return tokens
+	Token extractNumber();
+	Token extractWordOrKeyword();
+	Token extractCommentAfterRem();
+	Token extractQuotedText();
+	Token extractOperatororSymbol();
+
+
+
+	static bool isKeyword(const std::string& word);
+	static std::string toUpper(const std::string& s);
+
+
+
+};
+#endif // !LEXER_H
+
+Lexer.cpp
+
+#include "Lexer.h"
+
+#include<cctype>//for character checks
+#include<vector>//for storing keywords as simple list
+#include<algorithm>
+#include<iostream>
+
+
+
+//basic keywords stored as a simple list
+const std::vector<std::string> Keywords = {
+	"PRINT", "INPUT", "LET", "IF", "THEN", "ELSE", "GOTO", "GOSUB", "RETURN",
+	"FOR", "TO", "STEP", "NEXT", "WHILE", "WEND", "DO", "LOOP", "STOP", "END",
+	"NEW", "RUN", "LIST", "LOAD", "SAVE", "SYSTEM", "EDIT", "CONT", "DELETE",
+	"DIR", "OPEN", "CLOSE", "FIELD", "WRITE", "LPRINT", "DATA", "READ",
+	"RESTORE", "GET", "PUT", "BLOAD", "BSAVE", "ON", "ERROR", "RESUME", "CLEAR",
+	"ERL", "ERR", "ABS", "ASC", "ATN", "COS", "SIN", "TAN", "LOG", "EXP", "SQR",
+	"RND", "LEN", "LEFT$", "RIGHT$", "MID$", "TIME$", "DATE$", "INSTR", "VAL",
+	"PLOT", "LINE", "CIRCLE", "DRAW", "PAINT", "SOUND", "PLAY", "SCREEN",
+	"AND", "OR", "NOT", "XOR", "EQV", "IMP", "DEFINT", "DEFSNG", "DEFDBL", "DEFSTR", "DEF"
+
+};
+//Lexer::Lexer(string input ):currentIndex(0){}
+Lexer::Lexer() :currentIndex(0) {}
+//Main function:Scans and splits input into tokens
+std::vector<Token> Lexer::tokenize(const std::string& line) {
+	inputLine = line;
+	currentIndex = 0;
+	std::vector<Token>tokens;
+
+	skipSpaces();
+	//Line number validation
+	if (std::isdigit(getCurrentChar())) {
+		unsigned int lineStart = currentIndex;
+		Token num = extractNumber();
+		if (getCurrentChar() == ' ') {
+			tokens.push_back(num);//treated as line number
+			skipSpaces();
+		}
+		else {
+			currentIndex = lineStart;//rollback
+		}
+	}
+	while (currentIndex < inputLine.size()) {
+		skipSpaces();//skip any spaces
+		char c = getCurrentChar();
+		if (c == '\0')
+			break;//end of line
+		if (std::isdigit(c))
+		{
+			tokens.push_back(extractNumber());
+		}
+
+		else if (std::isalpha(c)) {
+			tokens.push_back(extractWordOrKeyword());//handles identifiers/keyword
+		}
+		else if (c == '\"') {
+			tokens.push_back(extractQuotedText());//handles string
+		}
+		else if (std::ispunct(c)) {
+			tokens.push_back(extractOperatororSymbol());
+		}
+		else {
+			//Invalid character
+			std::string invalid(1, c);
+			tokens.emplace_back(TokenType::Invalid, invalid, currentIndex);
+			moveToNextChar();//skip any unknown character
+		}
+	}
+	//Add an END_OF_LINE token to mark end
+	tokens.emplace_back(TokenType::END_OF_LINE, "", currentIndex);
+	return tokens;
+}
+
+
+
+//skip white spaces (space,tab,etc)
+void Lexer::skipSpaces() {
+	while (std::isspace(getCurrentChar())) {
+		moveToNextChar();
+	}
+}
+//gets the current character
+char Lexer::getCurrentChar()const {
+	return(currentIndex < inputLine.size()) ? inputLine[currentIndex] : '\0';
+}
+//Moves to the next character and returns it
+char Lexer::moveToNextChar() {
+	return(currentIndex < inputLine.size()) ? inputLine[currentIndex++] : '\0';
+
+}
+//extract a anumber token(like 10,20)
+Token Lexer::extractNumber() {
+	unsigned int start = currentIndex;
+	std::string num;
+	bool hasPoint = false;//to check float
+	while (std::isdigit(getCurrentChar()) ||
+		getCurrentChar() == '.' ||
+		getCurrentChar() == 'E' ||
+		getCurrentChar() == '+' ||
+		getCurrentChar() == '-') {
+		char ch = getCurrentChar();
+		if (ch == '.') {
+			if (hasPoint)
+				break;//only one dot allowed
+			hasPoint = true;
+		}
+		num += moveToNextChar();
+	}
+	return Token(TokenType::Number, num, start);
+}
+//Extracts either a keyword(like print) or identifier(like A$)
+Token Lexer::extractWordOrKeyword() {
+	unsigned int start = currentIndex;
+	std::string word;
+	//collect alphanumeric characters and $(eg A$,VAR1)
+	while (std::isalnum(getCurrentChar()) || getCurrentChar() == '$') {
+		word += moveToNextChar();
+	}
+	//Convert to uppercase for keyword comparison
+	std::string upper = toUpper(word);
+	//handles REM comments 
+	if (upper == "REM") {
+		return extractCommentAfterRem();
+
+	}
+	//check if it is a keyword
+	if (isKeyword(upper)) {
+		return Token(TokenType::Keyword, word, start);
+	}
+	//otherwise,its a identifier(variable/function name)
+	return Token(TokenType::Identifier, word, start);
+}
+//extract string literals
+Token Lexer::extractQuotedText()
+{
+	unsigned int start = currentIndex;
+	moveToNextChar();//skip opening quote
+	std::string text;
+	//keep collecting characters until closing quote or end of line
+	while (getCurrentChar() != '\0') {
+		if (getCurrentChar() == '\\') {
+			moveToNextChar();//escape
+
+			text += moveToNextChar();//escape sequence like \"
+		}
+		else if (getCurrentChar() == '\"') {
+			moveToNextChar();//skip closing quotes
+			break;
+		}
+		else {
+			text += moveToNextChar();
+		}
+	}
+	return Token(TokenType::String, text, start);
+}
+
+//extract symbols ,operators or seperators like :,=,+,-,>=
+Token Lexer::extractOperatororSymbol() {
+	unsigned int start = currentIndex;
+	char c = moveToNextChar();
+	char next = getCurrentChar();
+	//Two character operator check like >=,<=,<>
+	if ((c == '<' && next == '>') || (c == '<' && next == '=') || (c == '>' && next == '=')) {
+		std::string op;
+		op += c;
+		op += moveToNextChar();//consume second char
+		return Token(TokenType::Operator, op, start);
+	}
+	std::string single(1, c);
+	if (single == "," || single == ":" || single == ";") {
+		return Token(TokenType::Separator, single, start);
+	}
+	else if (std::string("+-=*/^<>()").find(c) != std::string::npos) {
+		return Token(TokenType::Operator, single, start);
+	}
+	else {
+		return Token(TokenType::Symbol, single, start);
+	}
+}
+//special case:Extracts entire comment after REM
+Token Lexer::extractCommentAfterRem() {
+	unsigned int start = currentIndex - 3;//REM already read
+	std::string comment = "REM";
+	//grab everything until end of line
+	while (getCurrentChar() != '\0') {
+		comment += moveToNextChar();
+	}
+	return Token(TokenType::Comment, comment, start);
+}
+//checks whether a word is in the keyword list
+
+bool Lexer::isKeyword(const std::string& word) {
+	return std::find(Keywords.begin(), Keywords.end(), word) != Keywords.end();
+}
+//converts a string to uppercase (for case-insensitive keyword check) 
+std::string Lexer::toUpper(const std::string& s) {
+	std::string result = s;
+	std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+	return result;
+}
+
+ASTNode.h
+
+#pragma once
+#include <string>
+#include <vector>
+
+enum class ASTType {
+    Program,
+    PrintStmt,
+    LetStmt,
+    IfElseStmt,
+    //IfStmt,
+    ForStmt,
+    NextStmt,
+    WhileStmt,
+    DoLoopStmt,
+    GotoStmt,
+    InputStmt,
+    DataStmt,
+    ReadStmt,
+    GosubStmt,
+    ReturnStmt,
+    StopStmt,
+    RemStmt,
+    OnErrorStmt, 
+    FieldStmt, 
+    CommandStmt,
+    NumberExpr,
+    IdentExpr,
+    BinOpExpr,
+    StringExpr,
+    MathFuncExpr, 
+    DefTypeStmt,
+};
+
+class ASTNode {
+public:
+    virtual ~ASTNode() {}
+    virtual ASTType type() const = 0;
+};
+
+using ASTList = std::vector<ASTNode*>;
+
+class ProgramNode : public ASTNode {
+public:
+    ASTList stmts;
+    ~ProgramNode() {
+        for (auto s : stmts) {
+            delete s;
+        }
+    }
+    ASTType type() const override { 
+        return ASTType::Program; 
+    }
+};
+
+class DataNode : public ASTNode {
+public:
+    std::vector<std::string> values;
+    DataNode(const std::vector<std::string>& vals) : values(vals) {}
+    ASTType type() const override { 
+        return ASTType::DataStmt; 
+    }
+};
+
+class ReadNode : public ASTNode {
+public:
+    std::string var;
+    ReadNode(const std::string& n) : var(n) {}
+    ASTType type() const override { 
+        return ASTType::ReadStmt; 
+    }
+};
+
+class GosubNode : public ASTNode {
+public:
+    int line;
+    GosubNode(int ln) : line(ln) {}
+    ASTType type() const override {
+        return ASTType::GosubStmt; 
+    }
+};
+
+class ReturnNode : public ASTNode {
+public:
+    ASTType type() const override { 
+        return ASTType::ReturnStmt; 
+    }
+};
+
+class StopNode : public ASTNode {
+public:
+    ASTType type() const override { 
+        return ASTType::StopStmt; 
+    }
+};
+
+class RemNode : public ASTNode {
+public:
+    std::string comment;
+    RemNode(const std::string& c) : comment(c) {}
+    ASTType type() const override {
+        return ASTType::RemStmt; 
+    }
+};
+
+class PrintNode : public ASTNode {
+public:
+    ASTNode* expr;
+    PrintNode(ASTNode* e) : expr(e) {}
+    ~PrintNode() { 
+        delete expr; 
+    }
+    ASTType type() const override {
+        return ASTType::PrintStmt; 
+    }
+};
+//========
+//class IfNode :public ASTNode {
+//public:
+//    ASTNode* lhs;
+//    std::string op;
+//    ASTNode* rhs;
+//    ASTNode* thenStmt;
+//
+//    IfNode(ASTNode* l,const std::string& o,ASTNode* r,ASTNode* t)
+//        :lhs(l),op(o),rhs(r),thenStmt(t){}
+//    ~IfNode() {
+//        delete lhs;
+//        delete rhs;
+//        delete thenStmt;
+//    }
+//
+//    ASTType type() const override {
+//        return ASTType::IfStmt;
+//}
+//};
+
+
+class LetNode : public ASTNode {
+public:
+    std::string name;
+    ASTNode* expr;
+    LetNode(const std::string& n, ASTNode* e)
+        : name(n), expr(e) {}
+    ~LetNode() {
+        delete expr; 
+    }
+    ASTType type() const override {
+        return ASTType::LetStmt; 
+    }
+};
+//
+class NumberNode : public ASTNode {
+public:
+    std::string value;
+    NumberNode(const std::string& v) : value(v) {}
+    ASTType type() const override {
+        return ASTType::NumberExpr; 
+    }
+};
+
+class IdentNode : public ASTNode {
+public:
+    std::string name;
+    IdentNode(const std::string& n) : name(n) {}
+    ASTType type() const override {
+        return ASTType::IdentExpr; 
+    }
+};
+
+class BinOpNode : public ASTNode {
+public:
+    std::string op;
+    ASTNode* left;
+    ASTNode* right;
+    BinOpNode(const std::string& o, ASTNode* l, ASTNode* r)
+        : op(o), left(l), right(r) {}
+    ~BinOpNode() {
+        delete left; delete right; 
+    }
+    ASTType type() const override {
+        return ASTType::BinOpExpr; 
+    }
+};
+
+class MathFuncNode : public ASTNode {
+public:
+    std::string func;
+    ASTNode* argument;
+    MathFuncNode(const std::string& f, ASTNode* arg) : func(f), argument(arg) {}
+    ~MathFuncNode() { delete argument; }
+    ASTType type() const override { return ASTType::MathFuncExpr; }
+};
+
+class DefTypeNode : public ASTNode {
+public:
+    std::string typ; // "DEFINT", "DEFSNG"
+    std::string range; // e.g. "A-F"
+    DefTypeNode(const std::string& t, const std::string& r) : typ(t), range(r) {}
+    ASTType type() const override { return ASTType::DefTypeStmt; }
+};
+
+class ForNode :public ASTNode {
+public:
+    std::string var;
+    ASTNode* start;
+    ASTNode* end;
+    ASTNode* step;
+    ASTNode* body;
+    ForNode(const std::string& v, ASTNode* s, ASTNode* e, ASTNode* st, ASTNode* b) {
+        var = v;
+        start = s;
+        end = e;
+        step = st;
+        body = b;
+    }
+
+    ~ForNode() {
+        delete start;
+        delete end;
+        delete step;
+        delete body;
+    }
+
+    ASTType type() const override {
+        return ASTType::ForStmt;
+    }
+};
+
+class NextNode : public ASTNode {
+public:
+    std::string var;
+    NextNode(const std::string& v) : var(v) {}
+    ASTType type() const override { return ASTType::NextStmt; }
+};
+
+class WhileNode : public ASTNode {
+public:
+    ASTNode* cond;
+    ASTNode* body;
+    WhileNode(ASTNode* c, ASTNode* b) : cond(c), body(b) {}
+    ~WhileNode() { delete cond; delete body; }
+    ASTType type() const override { return ASTType::WhileStmt; }
+};
+
+class DoLoopNode : public ASTNode {
+public:
+    ASTNode* body;
+    ASTNode* cond;        // optional
+    bool untilStyle;
+    DoLoopNode(ASTNode* b, ASTNode* c, bool u)
+        : body(b), cond(c), untilStyle(u) {}
+    ~DoLoopNode() { delete body; if (cond) delete cond; }
+    ASTType type() const override { return ASTType::DoLoopStmt; }
+};
+class GotoNode :public ASTNode {
+public:
+    int line;
+    GotoNode(int n) {
+        line = n;
+    }
+    ASTType type() const override {
+        return ASTType::GotoStmt;
+    }
+};
+class IfElseNode :public ASTNode {
+public:
+    ASTNode* left;
+    std::string op;
+    ASTNode* right;
+    ASTNode* thenStmt;
+    ASTNode* elseStmt;
+
+    IfElseNode(ASTNode* l, const std::string& o, ASTNode* r, ASTNode* t, ASTNode* e) {
+        left = l;
+        op = o;
+        right = r;
+        thenStmt = t;
+        elseStmt = e;
+    }
+
+    ~IfElseNode() {
+        delete left;
+        delete right;
+        delete thenStmt;
+        if (elseStmt) {
+            delete elseStmt;
+        }
+    }
+    ASTType type() const override {
+        return ASTType::IfElseStmt;
+    }
+
+};
+
+class InputNode :public ASTNode {
+public:
+    std::string name;
+    InputNode(const std::string& n) {
+        name = n;
+    }
+    ASTType type() const override { 
+        return ASTType::InputStmt; 
+    }
+};
+
+class StringNode : public ASTNode {
+public:
+    std::string value;
+    StringNode(const std::string& v) {
+        value = v;
+    }
+    ASTType type() const override { 
+        return ASTType::StringExpr; 
+    }
+};
+
+class OnErrorNode : public ASTNode {
+public:
+    int line;
+    OnErrorNode(int ln) : line(ln) {}
+    ASTType type() const override { return ASTType::OnErrorStmt; }
+};
+
+class FieldNode : public ASTNode {
+public:
+    int fileNum;
+    std::vector<std::pair<int, std::string>> fields;
+    FieldNode(int f, const std::vector<std::pair<int, std::string>>& fs)
+        : fileNum(f), fields(fs) {}
+    ASTType type() const override { return ASTType::FieldStmt; }
+};
+
+class CommandNode : public ASTNode {
+public:
+    std::string cmd;
+    std::vector<std::string> args;
+    CommandNode(const std::string& c, const std::vector<std::string>& a)
+        : cmd(c), args(a) {}
+    ASTType type() const override { return ASTType::CommandStmt; }
+};
+
+parser.h
+
+#pragma once
+#include "ASTNode.h"
+#include "Token.h"
+#include <vector>
+#include<string>
+
+class Parser {
+public:
+    Parser() {}
+    ASTNode* parse(const std::vector<Token>& toks);
+
+private:
+    const std::vector<Token>* tokens = nullptr;
+    int pos = 0;
+
+    const Token& peek() const;
+    Token get();
+    bool match(TokenType,const std::string& value="");
+    //bool check(TokenType type, const std::string& value = "") const;
+
+    ASTNode* parseProgram();
+    ASTNode* parseStatement();
+    ASTNode* parseExpression();
+    ASTNode* parseTerm();
+    ASTNode* parseFactor();
+    //std::string parseComparison();
+    ASTNode* parseFor();
+    ASTNode* parseLet();
+    ASTNode* parsePrint();
+    ASTNode* parseIf();
+    ASTNode* parseWhile();
+    ASTNode* parseDo();
+    ASTNode* parseGoto();
+    ASTNode* parseGosub();
+    ASTNode* parseReturn();
+    ASTNode* parseData();
+    ASTNode* parseRead();
+    ASTNode* parseStop();
+    ASTNode* parseRem();
+    ASTNode* parseInput();
+    ASTNode* parseField();
+    ASTNode* parseCommand();
+    ASTNode* parseMathFunc();
+    ASTNode* parseDefType();
+    ASTNode* parseOnError();
+};
+
+parser.cpp
+
+#include "parser.h"
+#include <stdexcept>
+#include<cstdlib>
+#include<iostream>
+
+class PrintListNode : public ASTNode {
+public:
+    std::vector<ASTNode*> exprs;
+    PrintListNode(const std::vector<ASTNode*>& e) : exprs(e) {}
+    ~PrintListNode() { for (auto e : exprs) delete e; }
+    ASTType type() const override { return ASTType::PrintStmt; }
+};
+
+ASTNode* Parser::parse(const std::vector<Token>& toks) {
+    tokens = &toks;
+    pos = 0;
+    return parseProgram();
+}
+
+const Token& Parser::peek() const {
+    static Token eof = Token(TokenType::END_OF_LINE, "", 0);
+    if (pos < (int)tokens->size()) {
+        return (*tokens)[pos];
+    }
+    return eof;
+}
+
+Token Parser::get() {
+    if (pos < tokens->size()){
+        Token t= (*tokens)[pos];
+        pos = pos + 1;
+        return t;
+    }else{
+    return peek();
+    }
+}
+
+bool Parser::match(TokenType t, const std::string& value) {
+    if (peek().type != t) {
+        return false;
+    }
+    if (value.empty() == false && peek().value != value) {
+        return false;
+    }
+    get();
+    return true;
+}
+
+//ASTNode* Parser::parseProgram() {
+//    ProgramNode* program = new ProgramNode();
+//    while (peek().type != TokenType::END_OF_LINE) {
+//       /*ASTNode* stmt=parseStatement();
+//        program->stmts.push_back(stmt);*/
+//        ASTNode* stmt = parseStatement();
+//        if (stmt != nullptr) {
+//            program->stmts.push_back(stmt);
+//        }
+//    }
+//    return program;
+//}
+
+//ASTNode* Parser::parseProgram() {
+//    ProgramNode* program = new ProgramNode();
+//    while (peek().type != TokenType::END_OF_LINE) {
+//        ASTNode* stmt = parseStatement();
+//        if (!stmt) break;  // `END` or label-only line
+//        program->stmts.push_back(stmt);
+//    }
+//    return program;
+//}
+
+// parseProgram handles WHILE...WEND blocks (multi-statement inside)
+
+ASTNode* Parser::parseProgram() {
+    ProgramNode* prog = new ProgramNode();
+
+    while (peek().type != TokenType::END_OF_LINE) {
+        // Skip line number tokens at start of statement
+        if (peek().type == TokenType::Number) {
+            get(); // consume and ignore line number token
+            continue;
+        }
+
+        // Parse WHILE block (multi-line)
+        if (peek().type == TokenType::Keyword && peek().value == "WHILE") {
+            get(); // consume WHILE
+
+            ASTNode* cond = parseExpression();
+
+            std::vector<ASTNode*> bodyStmts;
+            while (!(peek().type == TokenType::Keyword && peek().value == "WEND")) {
+                if (peek().type == TokenType::END_OF_LINE) {
+                    delete cond;
+                    for (auto s : bodyStmts) delete s;
+                    delete prog;
+                    throw std::runtime_error("WHILE missing WEND");
+                }
+                ASTNode* stmt = parseStatement();
+                if (!stmt) throw std::runtime_error("WHILE missing WEND");
+                bodyStmts.push_back(stmt);
+
+                match(TokenType::Separator, ":");
+            }
+
+            if (!match(TokenType::Keyword, "WEND")) {
+                delete cond;
+                for (auto s : bodyStmts) delete s;
+                delete prog;
+                throw std::runtime_error("WHILE missing WEND");
+            }
+
+            ASTNode* body = nullptr;
+            if (bodyStmts.size() == 1) {
+                body = bodyStmts[0];
+            }
+            else {
+                auto* block = new ProgramNode();
+                block->stmts = std::move(bodyStmts);
+                body = block;
+            }
+
+            prog->stmts.push_back(new WhileNode(cond, body));
+            continue;
+        }
+
+        // TODO: similarly handle FOR...NEXT and DO...LOOP multi-line blocks here
+
+        ASTNode* stmt = parseStatement();
+        if (!stmt) break;
+        prog->stmts.push_back(stmt);
+
+        while (match(TokenType::Separator, ":")) {
+            stmt = parseStatement();
+            if (!stmt) break;
+            prog->stmts.push_back(stmt);
+        }
+    }
+
+    return prog;
+}
+
+
+//ASTNode* Parser::parseProgram() {
+//    ProgramNode* program = new ProgramNode();
+//    while (peek().type != TokenType::END_OF_LINE) {
+//        ASTNode* stmt = parseStatement();
+//        if (!stmt) break;
+//        program->stmts.push_back(stmt);
+//
+//        // handle multiple statements on same line:
+//        while (match(TokenType::Separator, ":")) {
+//            ASTNode* nextStmt = parseStatement();
+//            if (!nextStmt) break;
+//            program->stmts.push_back(nextStmt);
+//        }
+//    }
+//    return program;
+//}
+
+
+
+
+ASTNode* Parser::parseStatement() {
+    // Drop line labels like "100 GOTO 130"
+    //if (peek().type == TokenType::Number) {
+    //    if (pos + 1 < (int)tokens->size() &&
+    //        (*tokens)[pos + 1].type == TokenType::Keyword) {
+    //        get(); // consume the label number
+    //    }
+    //}
+    //------------------------------------------
+
+    if (match(TokenType::Keyword, "WEND")) {
+        return nullptr;
+    }
+
+    if (peek().type == TokenType::Identifier) {
+        int savedPos = pos;
+        std::string id = peek().value;
+        get();
+
+        if (match(TokenType::Operator, "=")) {
+            ASTNode* right = parseExpression();
+            return new LetNode(id, right);
+        }
+        // rollback if no '=' found
+        pos = savedPos;
+    }
+
+    if (peek().type == TokenType::Number) {
+        // If next token doesn't start a stmt, skip the label
+        if (pos + 1 < (int)tokens->size() &&
+            ((*tokens)[pos + 1].type == TokenType::END_OF_LINE ||
+                (*tokens)[pos + 1].value == "")) {
+            get();
+            return nullptr;
+        }
+        get(); // remove label before normal parsing
+    }
+    //---------------------------------------------------
+    //if (match(TokenType::Keyword, "PRINT")) return parsePrint();
+    // FOR
+    if (match(TokenType::Keyword, "FOR")) {
+        return parseFor();
+    }
+
+    if (match(TokenType::Keyword, "NEXT")) {
+        if (!match(TokenType::Identifier))
+            throw std::runtime_error("NEXT needs variable");
+        return new NextNode(tokens->at(pos - 1).value);
+    }
+    //while
+    if (match(TokenType::Keyword, "WHILE")) {
+        return parseWhile();
+    }
+    //do-while
+    if (match(TokenType::Keyword, "DO")) {
+        return parseDo();
+    }
+
+
+    // IF ... THEN ... [ELSE ...]
+    if (match(TokenType::Keyword, "IF")) {
+        return parseIf();
+    }
+    //------------------------------------------------------
+    // GOTO
+    if (peek().type == TokenType::Keyword && peek().value == "GOTO") {
+        get(); // consume the "GOTO" keyword
+        std::cerr << "[DEBUG] GOTO detected; calling parseGoto(), pos=" << pos << "\n";
+        return parseGoto();
+    }
+    //--------------------------------------------------------
+    //GOSUB
+    if (match(TokenType::Keyword, "GOSUB")) {
+        return parseGosub();
+    }
+    if (match(TokenType::Keyword, "RETURN")) {
+        return parseReturn();
+    }
+    if (match(TokenType::Keyword, "DATA")) {
+        return parseData();
+    }
+    if (match(TokenType::Keyword, "READ")) {
+        return parseRead();
+    }
+    if (match(TokenType::Keyword, "STOP")) {
+        return parseStop();
+    }
+
+    // INPUT
+    if (match(TokenType::Keyword, "INPUT")) {
+        return parseInput();
+    }
+
+    // PRINT
+    if (match(TokenType::Keyword, "PRINT")) {
+        ASTNode* expr = parseExpression();
+        return new PrintNode(expr);
+    }
+    if (match(TokenType::Keyword, "DATA")) return parseData();
+
+    if (match(TokenType::Keyword, "READ")) return parseRead();
+
+    // LET
+    if (match(TokenType::Keyword, "LET")) {
+        if (!match(TokenType::Identifier)) {
+            throw std::runtime_error("LET requires variable name");
+        }
+        std::string name = (*tokens)[pos - 1].value;
+        if (!match(TokenType::Operator, "=")) {
+            throw std::runtime_error("LET needs '='");
+        }
+        ASTNode* expr = parseExpression();
+        return new LetNode(name, expr);
+    }
+    if (peek().type == TokenType::Identifier) {
+        int savedPos = pos;
+        std::string varName = peek().value;
+        get();
+        if (match(TokenType::Operator, "=")) {
+            ASTNode* expr = parseExpression();
+            return new LetNode(varName, expr);
+        }
+        pos = savedPos; // rollback if not assignment
+    }
+
+    if (match(TokenType::Keyword, "ON")) {
+        if (match(TokenType::Keyword, "ERROR")) {
+            if (!match(TokenType::Keyword, "GOTO"))
+                throw std::runtime_error("ON ERROR missing GOTO");
+            if (!match(TokenType::Number))
+                throw std::runtime_error("ON ERROR needs number");
+            int ln = std::atoi(tokens->at(pos - 1).value.c_str());
+            return new OnErrorNode(ln);
+        }
+    }
+
+    if (match(TokenType::Keyword, "FIELD")) return parseField();
+
+    //if (match(TokenType::Keyword, "STOP")) return new StopNode();
+
+    if (peek().type == TokenType::Keyword) return parseCommand();
+
+    // END
+    if (match(TokenType::Keyword, "END")) {
+        return nullptr;
+    }
+
+    // Unexpected ELSE
+    /*if (peek().type == TokenType::Keyword && peek().value == "ELSE") {
+        throw std::runtime_error("Unexpected token 'ELSE'");
+    }*/
+
+    // Default: treat as expression or syntax error
+    throw std::runtime_error("Unexpected token '" + peek().value + "'");
+    //return parseExpression();
+}
+//std::string Parser::parseComparison() {
+//    if (peek().type == TokenType::Operator || (peek().type == TokenType::Operator &&
+//        (peek().value == "=" || peek().value == "<" || peek().value == ">" || peek().value == "<>" || peek().value == ">=" || peek().value == "<="))) {
+//        std::string op = peek().value;
+//        get();
+//        return op;
+//        
+//    }
+//    throw std::runtime_error("=,<>,<,>,<=,>=)");
+//}
+
+//ASTNode* Parser::parseExpression() {
+//    ASTNode* lhs = parseTerm();
+//    while (true) {
+//        if (peek().type == TokenType::Symbol &&
+//            (peek().value == "+" || peek().value == "-")) {
+//                    std::string op = get().value;
+//                    ASTNode* rhs = parseTerm();
+//                    lhs = new BinOpNode(op, lhs, rhs);
+//                }else {
+//                     break;
+//        }
+//        }
+//        return lhs;
+//    }
+
+//ASTNode* Parser::parseExpression() {
+//    ASTNode* node = parseTerm();
+//    while (match(TokenType::Operator, "+") || match(TokenType::Operator, "-")) {
+//        std::string op = (*tokens)[pos - 1].value;
+//        ASTNode* rhs = parseTerm();
+//        node = new BinOpNode(op, node, rhs);
+//    }
+//    return node;
+//}
+
+// parseExpression updated to handle comparison operators properly
+
+ASTNode* Parser::parsePrint() {
+    std::vector<ASTNode*> exprs;
+
+    exprs.push_back(parseExpression());
+
+    // consume expressions separated by ';' or ','
+    while (match(TokenType::Separator, ";") || match(TokenType::Separator, ",")) {
+        exprs.push_back(parseExpression());
+    }
+
+    if (exprs.size() == 1) {
+        return new PrintNode(exprs.front());
+    }
+    else {
+        return new PrintListNode(exprs);
+    }
+}
+//=====
+ASTNode* Parser::parseExpression() {
+    ASTNode* node = parseTerm();
+    while (peek().type == TokenType::Operator &&
+        (peek().value == "+" || peek().value == "-" ||
+            peek().value == "<" || peek().value == ">" ||
+            peek().value == "=" || peek().value == "<=" ||
+            peek().value == ">=" || peek().value == "<>")) {
+        std::string op = get().value;
+        ASTNode* rhs = parseTerm();
+        node = new BinOpNode(op, node, rhs);
+    }
+    return node;
+}
+
+
+//ASTNode* Parser::parseTerm() {
+//    ASTNode* lhs = parseFactor();
+//    while (true) {
+//        if (peek().type == TokenType::Symbol &&
+//            (peek().value == "*" || peek().value == "/")) {
+//            std::string op = get().value;
+//            ASTNode* rhs = parseFactor();
+//            lhs = new BinOpNode(op, lhs, rhs);
+//        }
+//        else {
+//            break;
+//        }
+//    }
+//    return lhs;
+//}
+
+ASTNode* Parser::parseTerm() {
+    ASTNode* node = parseFactor();
+    while (match(TokenType::Operator, "*") || match(TokenType::Operator, "/")) {
+        std::string op = (*tokens)[pos - 1].value;
+        ASTNode* rhs = parseFactor();
+        node = new BinOpNode(op, node, rhs);
+    }
+    return node;
+}
+//ASTNode* Parser::parseFactor() {
+//    if (match(TokenType::Number)) {
+//        std::string v = (*tokensPtr)[pos - 1].value;
+//        return new NumberNode(v);
+//    }
+//
+//    if (match(TokenType::String)) {
+//        std::string text = (*tokensPtr)[pos - 1].value;
+//        return new StringNode(text);  
+//    }
+//
+//    if (match(TokenType::Identifier)) {
+//        std::string n = (*tokensPtr)[pos - 1].value;
+//        return new IdentNode(n);
+//    }
+//
+//    if (match(TokenType::Symbol) && (*tokensPtr)[pos - 1].value == "(") {
+//        ASTNode* expr = parseExpression();
+//        if (!match(TokenType::Symbol) || (*tokensPtr)[pos - 1].value != ")") {
+//            throw std::runtime_error("Missing ')'");
+//        }
+//        return expr;
+//    }
+//
+//    throw std::runtime_error(std::string("Unexpected token '") + peek().value + "'");
+//}
+
+//ASTNode* Parser::parseFactor() {
+//    if (match(TokenType::Number)) {
+//        return new NumberNode((*tokens)[pos - 1].value);
+//    }
+//    if (match(TokenType::String)) {
+//        return new StringNode((*tokens)[pos - 1].value);
+//    }
+//    if (match(TokenType::Identifier)) {
+//        return new IdentNode((*tokens)[pos - 1].value);
+//    }
+//
+//    if (match(TokenType::Operator, "(")) {
+//        ASTNode* expr = parseExpression();
+//
+//        /*std::cerr << "[DEBUG] Expecting ')' but peek is: type="
+//            << static_cast<int>(peek().type)
+//            << ", value='" << peek().value << "'\n";*/
+//
+//        if (!match(TokenType::Operator, ")")) {
+//            throw std::runtime_error("Missing ')'");
+//        }
+//        return expr;
+//    }
+//
+//    throw std::runtime_error("Unexpected token '" + peek().value + "'");
+//}
+ASTNode* Parser::parseFor() {
+    if (!match(TokenType::Identifier)) {
+        throw std::runtime_error("FOR missing variable name");
+    }
+    std::string var = (*tokens)[pos - 1].value;
+
+    if (!match(TokenType::Operator, "=")) {
+        throw std::runtime_error("FOR missing '=' after variable");
+    }
+    ASTNode* start = parseExpression();
+
+    if (!match(TokenType::Keyword, "TO")) {
+        throw std::runtime_error("FOR missing TO");
+    }
+    ASTNode* end = parseExpression();
+
+    ASTNode* step;
+    if (match(TokenType::Keyword, "STEP")) {
+        step = parseExpression();
+    }
+    else {
+        step = new NumberNode("1");
+    }
+
+    if (!match(TokenType::Separator, ":")) {
+        throw std::runtime_error("FOR missing ':' before body");
+    }
+    ASTNode* body = parseStatement();
+
+    if (match(TokenType::Keyword, "NEXT")) {
+        if (!match(TokenType::Identifier) || (*tokens)[pos - 1].value != var) {
+            throw std::runtime_error("NEXT variable does not match FOR variable");
+        }
+    }
+    return new ForNode(var, start, end, step, body);
+}
+ASTNode* Parser::parseIf() {
+    ASTNode* left = parseExpression();
+
+    if (match(TokenType::Operator) == false) {
+        throw std::runtime_error("IF needs comparison operator");
+    }
+    std::string op = (*tokens)[pos - 1].value;
+
+    ASTNode* right = parseExpression();
+
+    if (match(TokenType::Keyword, "THEN") == false) {
+        throw std::runtime_error("IF missing THEN");
+    }
+
+    if (peek().type == TokenType::END_OF_LINE) {
+        throw std::runtime_error("IF missing statement after THEN");
+    }
+    ASTNode* thenStmt = parseStatement();
+    //ASTNode* thenStmt = nullptr;
+    //if (peek().type != TokenType::Keyword     // not another keyword
+    //    && peek().type != TokenType::END_OF_LINE // not end of line
+    //    ) {
+    //    thenStmt = parseStatement();
+    //}
+   /* if (match(TokenType::Keyword, "ELSE")) {
+        if (peek().type == TokenType::Keyword && peek().value == "IF") {
+            get();
+            elseStmt = parseIf();
+        }
+        else {
+            elseStmt = parseStatement();
+        }
+    }*/
+    ASTNode* elseStmt = nullptr;
+    if (match(TokenType::Keyword, "ELSE")) {
+        // ELSE followed by a valid statement
+        if (peek().type == TokenType::END_OF_LINE) {
+            throw std::runtime_error("IF missing statement after ELSE");
+        }
+        elseStmt = parseStatement();
+    }
+
+    return new IfElseNode(left, op, right, thenStmt, elseStmt);
+}
+//ASTNode* Parser::parseIf() {
+//    get();  
+//    ASTNode* left = parseExpression();
+//
+//    const Token& cmp = peek();
+//    if (cmp.type != TokenType::Symbol ||
+//        !(cmp.value == ">" || cmp.value == "<" || cmp.value == "=" ||
+//            cmp.value == "<=" || cmp.value == ">=" || cmp.value == "<>")) {
+//        throw std::runtime_error("IF missing comparison operator");
+//    }
+//    std::string op = get().value;
+//
+//    ASTNode* right = parseExpression();
+//
+// 
+//    if (!match(TokenType::Keyword) || (*tokensPtr)[pos - 1].value != "THEN") {
+//        throw std::runtime_error("IF missing THEN");
+//    }
+//    ASTNode* thenStmt = parseStatement();
+//
+//    ASTNode* elseStmt = nullptr;
+//    if (peek().type == TokenType::Keyword && peek().value == "ELSE") {
+//        get();
+//        if (peek().type == TokenType::Keyword && peek().value == "IF") {
+//            elseStmt = parseIf();
+//        }
+//        else {
+//            elseStmt = parseStatement();
+//        }
+//    }
+//    return new IfElseNode(left, op, right, thenStmt, elseStmt);
+//}
+//ASTNode* Parser::parseGoto() {
+//   // std::cerr << "[DEBUG] in parseGoto(), pos=" << pos << "\n";
+//    if (!match(TokenType::Number)) {
+//        throw std::runtime_error("GOTO requires a line number");
+//    }
+//    int line = std::atoi((*tokens)[pos - 1].value.c_str());
+//   // std::cerr << "[DEBUG] goto line = " << line << ", new pos=" << pos << "\n";
+//    while (match(TokenType::Separator, ":"));
+//    return new GotoNode(line);
+//}
+
+//ASTNode* Parser::parseWhile() {
+//    ASTNode* cond = parseExpression();
+//    ASTNode* body = nullptr;
+//    if (!match(TokenType::Separator, ":")) {
+//        body = parseStatement();
+//    }
+//    if (!match(TokenType::Keyword, "WEND")) {
+//        throw std::runtime_error("WHILE missing WEND");
+//    }
+//    return new WhileNode(cond, body);
+//}
+
+ASTNode* Parser::parseWhile() {
+    // We're at the token right after 'WHILE', parse the loop condition expression
+    ASTNode* condition = parseExpression();
+
+    // Check if the next token is a colon, meaning the loop body starts on the same line
+    // If so, parse the single statement after colon as the loop body
+    ASTNode* body = nullptr;
+    if (match(TokenType::Separator, ":")) {
+        body = parseStatement();
+    }
+
+    // Expect the loop terminator keyword 'WEND'
+    if (!match(TokenType::Keyword, "WEND")) {
+        throw std::runtime_error("WHILE loop missing WEND");
+    }
+
+    // Create and return the AST node for the WHILE loop
+    return new WhileNode(condition, body);
+}
+
+// parseDo handles DO ... LOOP and LOOP WITH conditions
+
+ASTNode* Parser::parseDo() {
+    ProgramNode* body = new ProgramNode();
+
+    while (true) {
+        if (peek().type == TokenType::Keyword && peek().value == "LOOP") {
+            break;
+        }
+        if (peek().type == TokenType::END_OF_LINE) {
+            delete body;
+            throw std::runtime_error("DO missing LOOP");
+        }
+        while (match(TokenType::Separator, ":")) {} // skip extra colon separators
+
+        if (peek().type == TokenType::Keyword && peek().value == "LOOP") {
+            break;
+        }
+
+        ASTNode* stmt = parseStatement();
+        if (!stmt) break;
+        body->stmts.push_back(stmt);
+    }
+
+    if (!match(TokenType::Keyword, "LOOP")) {
+        delete body;
+        throw std::runtime_error("DO missing LOOP");
+    }
+
+    ASTNode* cond = nullptr;
+    bool until = false;
+    if (match(TokenType::Keyword, "WHILE")) {
+        cond = parseExpression();
+    }
+    else if (match(TokenType::Keyword, "UNTIL")) {
+        until = true;
+        cond = parseExpression();
+    }
+
+    if (body->stmts.size() == 1) {
+        ASTNode* singleStmt = body->stmts.front();
+        body->stmts.clear();
+        delete body;
+        return new DoLoopNode(singleStmt, cond, until);
+    }
+    return new DoLoopNode(body, cond, until);
+}
+
+
+
+
+ASTNode* Parser::parseGoto() {
+    if (!match(TokenType::Number)) {
+        throw std::runtime_error("GOTO needs line");
+    }
+    int line = std::atoi((*tokens)[pos - 1].value.c_str());
+    return new GotoNode(line);
+}
+
+ASTNode* Parser::parseData() {
+    std::vector<std::string> vals;
+    do {
+        if (!match(TokenType::Number)) throw std::runtime_error("DATA needs numbers");
+        vals.push_back(tokens->at(pos - 1).value);
+    } while (match(TokenType::Separator, ","));
+    return new DataNode(vals);
+}
+
+ASTNode* Parser::parseRead() {
+    if (!match(TokenType::Identifier)) {
+        throw std::runtime_error("READ needs variable");
+    }
+    return new ReadNode((*tokens)[pos - 1].value);
+}
+
+
+ASTNode* Parser::parseOnError() {
+    if (!match(TokenType::Keyword, "ERROR")) throw std::runtime_error("ON ERROR syntax");
+    if (!match(TokenType::Keyword, "GOTO")) throw std::runtime_error("ON ERROR missing GOTO");
+    if (!match(TokenType::Number)) throw std::runtime_error("ON ERROR needs number");
+    int ln = std::atoi(tokens->at(pos - 1).value.c_str());
+    return new OnErrorNode(ln);
+}
+
+
+ASTNode* Parser::parseGosub() {
+    if (!match(TokenType::Number)) {
+        throw std::runtime_error("GOSUB needs line");
+    }
+    int ln = std::stoi((*tokens)[pos - 1].value);
+    return new GosubNode(ln);
+}
+
+ASTNode* Parser::parseField() {
+    if (!match(TokenType::Number)) throw std::runtime_error("FIELD needs file number");
+    int fn = std::atoi(tokens->at(pos - 1).value.c_str());
+    std::vector<std::pair<int, std::string>> fs;
+    while (match(TokenType::Separator, ",")) {
+        if (!match(TokenType::Number)) throw std::runtime_error("FIELD width missing");
+        int w = std::atoi(tokens->at(pos - 1).value.c_str());
+        if (!match(TokenType::Keyword, "AS")) throw std::runtime_error("FIELD missing AS");
+        if (!match(TokenType::Identifier)) throw std::runtime_error("FIELD missing var");
+        fs.push_back({ w, tokens->at(pos - 1).value });
+    }
+    return new FieldNode(fn, fs);
+}
+
+ASTNode* Parser::parseCommand() {
+    std::string cmd = tokens->at(pos - 1).value;
+    std::vector<std::string> args;
+    while (match(TokenType::Identifier) || match(TokenType::String) || match(TokenType::Number)) {
+        args.push_back(tokens->at(pos - 1).value);
+        if (!match(TokenType::Separator, ",")) break;
+    }
+    return new CommandNode(cmd, args);
+}
+
+ASTNode* Parser::parseReturn() {
+    return new ReturnNode();
+}
+
+ASTNode* Parser::parseStop() {
+    return new StopNode();
+}
+
+//ASTNode* Parser::parseRem() {
+//    get(); // consume REM
+//    std::string rest = peek().value; // everything else
+//    pos = tokens->size(); // skip to EOL
+//    return new RemNode(rest);
+//}
+
+
+ASTNode* Parser::parseRem() {
+    get(); // consume "REM"
+    std::string comment;
+    while (peek().type != TokenType::END_OF_LINE) {
+        if (!comment.empty()) comment += " ";
+        comment += peek().value;
+        get();
+    }
+    return new RemNode(comment);
+}
+
+
+
+ASTNode* Parser::parseInput() {
+    if (!match(TokenType::Identifier)) {
+        throw std::runtime_error("INPUT requires a variable name");
+    }
+    std::string name = (*tokens)[pos - 1].value;
+    return new InputNode(name);
+}
+
+ASTNode* Parser::parseFactor() {
+    if (match(TokenType::Number)) {
+        return new NumberNode(tokens->at(pos - 1).value);
+    }
+    if (match(TokenType::String)) {
+        return new StringNode(tokens->at(pos - 1).value);
+    }
+    if (match(TokenType::Identifier)) {
+        return new IdentNode(tokens->at(pos - 1).value);
+    }
+    if (match(TokenType::Operator, "(")) {
+        ASTNode* expr = parseExpression();
+        if (!match(TokenType::Operator, ")")) {
+            throw std::runtime_error("Missing ')'");
+        }
+        return expr;
+    }
+    if (peek().type == TokenType::Keyword &&
+        (peek().value == "SIN" || peek().value == "COS" ||
+            peek().value == "SQR" || peek().value == "LOG" ||
+            peek().value == "EXP")) {
+        return parseMathFunc();
+    }
+    throw std::runtime_error("Unexpected token '" + peek().value + "'");
+}
+
+ASTNode* Parser::parseMathFunc() {
+    std::string fn = get().value; // function name
+    if (!match(TokenType::Operator, "(")) {
+        throw std::runtime_error(fn + " needs '('");
+    }
+    ASTNode* arg = parseExpression();
+    if (!match(TokenType::Operator, ")")) {
+        throw std::runtime_error(fn + " missing ')'");
+    }
+    return new MathFuncNode(fn, arg);
+}
+
+ASTNode* Parser::parseDefType() {
+    std::string dt = get().value; // DEFINT or DEFSNG
+    if (!match(TokenType::Identifier)) {
+        throw std::runtime_error(dt + " needs variable range");
+    }
+    std::string rng = tokens->at(pos - 1).value;
+    return new DefTypeNode(dt, rng);
+}
+
+main.cpp
+
+#include "Lexer.h"
+#include "Parser.h"
+#include "ASTNode.h"
+#include <iostream>
+#include <vector>
+#include <string>
+
+// Forward declaration
+void printAST(ASTNode* node, int indent = 0);
+
+int main() {
+    Lexer lexer;
+    Parser parser;
+
+    std::vector<std::string> tests = {
+    "LET X = 5",
+    "WHILE X < 3 ",
+    "PRINT X",
+    "WEND",
+    "DO : PRINT X : LOOP WHILE X < 10",
+    "RUN",
+    "SAVE \"MYPROG\"",
+    "DEFINT A-C",
+    "PRINT SIN(3.14)",
+    "PRINT X + COS(Y)",
+    "ON ERROR GOTO 100",
+    "FIELD 1,20 AS N$,10 AS ID$",
+    "DATA 1,2,3,4",
+    "READ A",
+    "GOSUB 200",
+    "RETURN",
+    "STOP",
+    "RUN",
+    "EDIT file.txt",
+    "PRINT \"HELLO\"",
+    "IF X = 3 THEN PRINT \"Yes\" ELSE PRINT \"No\"",
+    "FOR I = 1 TO 5 STEP 2 : PRINT I : NEXT I",
+    "FOR I=1 TO 5 STEP 2 ",
+    "PRINT I",
+    "NEXT I",
+    "WHILE X < 3 : PRINT X : WEND",
+    "PRINT X",
+
+
+    /* "10 INPUT \"Enter a number: \", N",
+ "20 IF N > 0 THEN",
+ "30     PRINT \"Positive number\"",
+ "40 ELSE",
+ "50     PRINT \"Zero or Negative number\"",
+ "60 END IF",
+ "70 END",*/
+     "WRITE \"Hello\",X",
+     "END "
+    };
+
+    for (auto& line : tests) {
+        std::cout << "\n-- Input: " << line << "\n";
+        auto tokens = lexer.tokenize(line);
+        ASTNode* ast = nullptr;
+        try {
+            ast = parser.parse(tokens);
+            printAST(ast);
+        }
+        catch (const std::exception& ex) {
+            std::cerr << "Parse error: " << ex.what() << "\n";
+        }
+        delete ast;
+    }
+    return 0;
+}
+
+void printAST(ASTNode* node, int indent) {
+    if (!node) return;
+    std::string pad(indent, ' ');
+    switch (node->type()) {
+    case ASTType::Program: {
+        std::cout << pad << "Program\n";
+        for (auto s : static_cast<ProgramNode*>(node)->stmts) {
+            printAST(s, indent + 2);
+        }
+        break;
+    }
+    case ASTType::LetStmt: {
+        auto* n = static_cast<LetNode*>(node);
+        std::cout << pad << "LET " << n->name << "\n";
+        printAST(n->expr, indent + 2);
+        break;
+    }
+    case ASTType::PrintStmt: {
+        std::cout << pad << "PRINT\n";
+        printAST(static_cast<PrintNode*>(node)->expr, indent + 2);
+        break;
+    }
+    case ASTType::WhileStmt: {
+        auto* wn = static_cast<WhileNode*>(node);
+        std::cout << pad << "WHILE\n";
+        printAST(wn->cond, indent + 2);
+        if (wn->body) {
+            std::cout << pad << "  BODY\n";
+            printAST(wn->body, indent + 2);
+        }
+        break;
+    }
+    case ASTType::DoLoopStmt: {
+        auto* dn = static_cast<DoLoopNode*>(node);
+        std::cout << pad << "DO\n";
+        std::cout << pad << "  BODY\n";
+        printAST(dn->body, indent + 2);
+        if (dn->cond) {
+            std::cout << pad << "  COND (" << (dn->untilStyle ? "UNTIL" : "WHILE") << ")\n";
+            printAST(dn->cond, indent + 2);
+        }
+        break;
+    }
+    case ASTType::OnErrorStmt: {
+        auto* ne = static_cast<OnErrorNode*>(node);
+        std::cout << pad << "ON ERROR GOTO " << ne->line << "\n";
+        break;
+    }
+    case ASTType::FieldStmt: {
+        auto* fn = static_cast<FieldNode*>(node);
+        std::cout << pad << "FIELD file#=" << fn->fileNum;
+        for (auto& f : fn->fields) {
+            std::cout << ", width=" << f.first << " AS " << f.second;
+        }
+        std::cout << "\n";
+        break;
+    }
+    case ASTType::DataStmt: {
+        auto* dn = static_cast<DataNode*>(node);
+        std::cout << pad << "DATA";
+        for (auto& v : dn->values) {
+            std::cout << " " << v;
+        }
+        std::cout << "\n";
+        break;
+    }
+    case ASTType::ReadStmt: {
+        auto* rn = static_cast<ReadNode*>(node);
+        std::cout << pad << "READ " << rn->var << "\n";
+        break;
+    }
+    case ASTType::GosubStmt: {
+        auto* gs = static_cast<GosubNode*>(node);
+        std::cout << pad << "GOSUB " << gs->line << "\n";
+        break;
+    }
+    case ASTType::ReturnStmt:
+        std::cout << pad << "RETURN\n"; break;
+    case ASTType::StopStmt:
+        std::cout << pad << "STOP\n"; break;
+    case ASTType::CommandStmt: {
+        auto* cn = static_cast<CommandNode*>(node);
+        std::cout << pad << "CMD " << cn->cmd;
+        for (auto& a : cn->args) std::cout << " " << a;
+        std::cout << "\n";
+        break;
+    }
+    case ASTType::IfElseStmt: {
+        auto* in = static_cast<IfElseNode*>(node);
+        std::cout << pad << "IF\n";
+        printAST(in->left, indent + 2);
+        std::cout << pad << "  OP " << in->op << "\n";
+        printAST(in->right, indent + 2);
+        std::cout << pad << "THEN\n";
+        printAST(in->thenStmt, indent + 2);
+        if (in->elseStmt) {
+            std::cout << pad << "ELSE\n";
+            printAST(in->elseStmt, indent + 2);
+        }
+        break;
+    }
+    case ASTType::ForStmt: {
+        auto* fn = static_cast<ForNode*>(node);
+        std::cout << pad << "FOR " << fn->var << "\n";
+        printAST(fn->start, indent + 2);
+        std::cout << pad << "  TO\n";
+        printAST(fn->end, indent + 2);
+        std::cout << pad << "  STEP\n";
+        printAST(fn->step, indent + 2);
+        std::cout << pad << "  BODY\n";
+        printAST(fn->body, indent + 2);
+        break;
+    }
+    case ASTType::NextStmt: {
+        auto* nn = static_cast<NextNode*>(node);
+        std::cout << pad << "NEXT " << nn->var << "\n";
+        break;
+    }
+    case ASTType::BinOpExpr: {
+        auto* bn = static_cast<BinOpNode*>(node);
+        std::cout << pad << "BinOp (" << bn->op << ")\n";
+        printAST(bn->left, indent + 2);
+        printAST(bn->right, indent + 2);
+        break;
+    }
+    case ASTType::NumberExpr:
+        std::cout << pad << "Number " << static_cast<NumberNode*>(node)->value << "\n"; break;
+    case ASTType::IdentExpr:
+        std::cout << pad << "Ident " << static_cast<IdentNode*>(node)->name << "\n"; break;
+    case ASTType::StringExpr:
+        std::cout << pad << "String \"" << static_cast<StringNode*>(node)->value << "\"\n"; break;
+    default:
+        std::cout << pad << "UNKNOWN NODE\n"; break;
+    }
+}
