@@ -25,7 +25,11 @@ private:
     ASTNode* parseFactor();
     //std::string parseComparison();
     ASTNode* parseFor();
+    ASTNode* parseLet();
+    ASTNode* parsePrint();
     ASTNode* parseIf();
+    ASTNode* parseWhile();
+    ASTNode* parseDo();
     ASTNode* parseGoto();
     ASTNode* parseGosub();
     ASTNode* parseReturn();
@@ -34,5 +38,9 @@ private:
     ASTNode* parseStop();
     ASTNode* parseRem();
     ASTNode* parseInput();
-
+    ASTNode* parseField();
+    ASTNode* parseCommand();
+    ASTNode* parseMathFunc();
+    ASTNode* parseDefType();
+    ASTNode* parseOnError();
 };

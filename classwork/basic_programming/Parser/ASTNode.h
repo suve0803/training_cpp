@@ -9,6 +9,9 @@ enum class ASTType {
     IfElseStmt,
     //IfStmt,
     ForStmt,
+    NextStmt,
+    WhileStmt,
+    DoLoopStmt,
     GotoStmt,
     InputStmt,
     DataStmt,
@@ -17,10 +20,15 @@ enum class ASTType {
     ReturnStmt,
     StopStmt,
     RemStmt,
+    OnErrorStmt, 
+    FieldStmt, 
+    CommandStmt,
     NumberExpr,
     IdentExpr,
     BinOpExpr,
     StringExpr,
+    MathFuncExpr, 
+    DefTypeStmt,
 };
 
 class ASTNode {
@@ -174,6 +182,22 @@ public:
     }
 };
 
+class MathFuncNode : public ASTNode {
+public:
+    std::string func;
+    ASTNode* argument;
+    MathFuncNode(const std::string& f, ASTNode* arg) : func(f), argument(arg) {}
+    ~MathFuncNode() { delete argument; }
+    ASTType type() const override { return ASTType::MathFuncExpr; }
+};
+
+class DefTypeNode : public ASTNode {
+public:
+    std::string typ; // "DEFINT", "DEFSNG"
+    std::string range; // e.g. "A-F"
+    DefTypeNode(const std::string& t, const std::string& r) : typ(t), range(r) {}
+    ASTType type() const override { return ASTType::DefTypeStmt; }
+};
 
 class ForNode :public ASTNode {
 public:
@@ -202,6 +226,32 @@ public:
     }
 };
 
+class NextNode : public ASTNode {
+public:
+    std::string var;
+    NextNode(const std::string& v) : var(v) {}
+    ASTType type() const override { return ASTType::NextStmt; }
+};
+
+class WhileNode : public ASTNode {
+public:
+    ASTNode* cond;
+    ASTNode* body;
+    WhileNode(ASTNode* c, ASTNode* b) : cond(c), body(b) {}
+    ~WhileNode() { delete cond; delete body; }
+    ASTType type() const override { return ASTType::WhileStmt; }
+};
+
+class DoLoopNode : public ASTNode {
+public:
+    ASTNode* body;
+    ASTNode* cond;        // optional
+    bool untilStyle;
+    DoLoopNode(ASTNode* b, ASTNode* c, bool u)
+        : body(b), cond(c), untilStyle(u) {}
+    ~DoLoopNode() { delete body; if (cond) delete cond; }
+    ASTType type() const override { return ASTType::DoLoopStmt; }
+};
 class GotoNode :public ASTNode {
 public:
     int line;
@@ -263,3 +313,29 @@ public:
         return ASTType::StringExpr; 
     }
 };
+
+class OnErrorNode : public ASTNode {
+public:
+    int line;
+    OnErrorNode(int ln) : line(ln) {}
+    ASTType type() const override { return ASTType::OnErrorStmt; }
+};
+
+class FieldNode : public ASTNode {
+public:
+    int fileNum;
+    std::vector<std::pair<int, std::string>> fields;
+    FieldNode(int f, const std::vector<std::pair<int, std::string>>& fs)
+        : fileNum(f), fields(fs) {}
+    ASTType type() const override { return ASTType::FieldStmt; }
+};
+
+class CommandNode : public ASTNode {
+public:
+    std::string cmd;
+    std::vector<std::string> args;
+    CommandNode(const std::string& c, const std::vector<std::string>& a)
+        : cmd(c), args(a) {}
+    ASTType type() const override { return ASTType::CommandStmt; }
+};
+
