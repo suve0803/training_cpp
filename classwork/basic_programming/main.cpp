@@ -148,7 +148,7 @@ void printAST(ASTNode* node, int indent = 0) {
 }
 
 int main() {
-    std::ifstream file("prog.txt");
+    std::ifstream file("program.txt");
     if (!file) {
         std::cerr << "Error opening program.txt\n";
         return 1;

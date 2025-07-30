@@ -132,7 +132,7 @@ ASTNode* Parser::parseStatement() {
     if (match(TokenType::Keyword, "EDIT")) return new CommandNode("EDIT", {});
     if (match(TokenType::Keyword, "CLEAR")) return new CommandNode("CLEAR", {});
     if (match(TokenType::Keyword, "DIR")) return new CommandNode("DIR", {});
-    if (match(TokenType::Keyword, "RESTORE")) return new RestoreNode();
+    //if (match(TokenType::Keyword, "RESTORE")) return new RestoreNode();
 
     // Commands with one string argument
     if (match(TokenType::Keyword, "SAVE")) {
@@ -158,13 +158,13 @@ ASTNode* Parser::parseStatement() {
     }
 
     // File operations
-    if (match(TokenType::Keyword, "OPEN")) return parseOpen();
+   /* if (match(TokenType::Keyword, "OPEN")) return parseOpen();
     if (match(TokenType::Keyword, "CLOSE")) return parseClose();
     if (match(TokenType::Keyword, "WRITE")) return parseWrite();
     if (match(TokenType::Keyword, "GET")) return parseGet();
     if (match(TokenType::Keyword, "PUT")) return parsePut();
     if (match(TokenType::Keyword, "BLOAD")) return parseLoad();
-    if (match(TokenType::Keyword, "BSAVE")) return parseSave();
+    if (match(TokenType::Keyword, "BSAVE")) return parseSave();*/
 
     // Fallback for other known keyword-based commands
     if (peek().type == TokenType::Keyword) {

@@ -43,4 +43,5 @@ private:
     ASTNode* parseCommand();
     ASTNode* parseMathFunc();
     ASTNode* parseDefType();
+    //ASTNode* parseOpen();
 };
